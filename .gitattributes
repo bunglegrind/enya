@@ -1,0 +1,5 @@
+*.js text=lf
+*.html text=lf
+*.htm text=lf
+*.sh text=lf
+*.json text=lf

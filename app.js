@@ -46,7 +46,8 @@ sendButton.addEventListener("click", function () {
 
 
 const guitar = {
-    name: "NOVA Go Sonic System"
+    name: "NOVA Go Sonic System",
+    service: 0x11ab
 };
 
 let server;
@@ -105,15 +106,16 @@ function handleNotifications(event) {
 connectButton.addEventListener("click", async function () {
     const device = await navigator.bluetooth.requestDevice({
         filters: [{name: guitar.name}],
-        optionalServices: [0xab11, 0x1801, 0x1800]
+        optionalServices: [guitar.service, 0x1801, 0x1800]
     });
     server = await device.gatt.connect();
     toggle(disconnectButton);
     toggle(connectButton);
 
     root.appendChild(senderDiv);
+    device.addEventListener("gattserverdisconnected", cleanUp);
 
-    const service = await device.gatt.getPrimaryService(0xab11);
+    const service = await device.gatt.getPrimaryService(guitar.service);
     const chars = await service.getCharacteristics();
 
     notifier = chars.find((c) => c.properties.notify);
@@ -125,10 +127,14 @@ connectButton.addEventListener("click", async function () {
 
 });
 
-disconnectButton.addEventListener("click", async function () {
-    server.disconnect();
+function cleanUp() {
+    console.log("Device disconnetted");
     toggle(disconnectButton);
     toggle(connectButton);
     root.removeChild(senderDiv);
+}
 
+disconnectButton.addEventListener("click", async function () {
+    server.disconnect();
+    cleanUp();
 });

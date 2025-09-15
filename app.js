@@ -47,7 +47,17 @@ sendButton.addEventListener("click", function () {
 
 const guitar = {
     name: "NOVA Go Sonic System",
-    service: 0x11ab
+    service: 0xab11,
+    opcodes: {
+        switch: opcode: 0x0c, parameters: [
+            {name: "selector", min: 0, max: 3}
+            {name: "offset0", min: 0, max: 3}
+            {name: "offset1", min: 0, max: 3}
+            {name: "offset2", min: 0, max: 3}
+            {name: "offset3", min: 0, max: 3}
+        ]
+    },
+    state
 };
 
 let server;
@@ -82,7 +92,7 @@ function validateMessage(m) {
 }
 
 function printResponse(response) {
-    notificationDisplay.textContent = response.map((x) => x.toString(16)).join(" ");
+    notificationDisplay.textContent = response.map((x) => x.toString(16).padStart(2, "0")).join(" ");
 }
 
 
@@ -101,6 +111,8 @@ function handleNotifications(event) {
 
     printResponse(response);
 }
+
+async function getGuitarState() {}
 
 //what happens if one of the two radios goes offline or outside the range?
 connectButton.addEventListener("click", async function () {
@@ -125,9 +137,14 @@ connectButton.addEventListener("click", async function () {
 
     notifier.addEventListener("characteristicvaluechanged", handleNotifications);
 
+    guitar.state = await getGuitarState();
+
 });
 
 function cleanUp() {
+    if (!server.connected) {
+        return;
+    }
     console.log("Device disconnetted");
     toggle(disconnectButton);
     toggle(connectButton);
@@ -135,6 +152,6 @@ function cleanUp() {
 }
 
 disconnectButton.addEventListener("click", async function () {
-    server.disconnect();
     cleanUp();
+    server.disconnect();
 });

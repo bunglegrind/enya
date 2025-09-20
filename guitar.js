@@ -3,24 +3,24 @@ const guitar = {
     name: "NOVA Go Sonic System",
     service: 0xab11,
     opcodes: {
-        battery: 0x11
+        battery: 0x11,
+        autoshutdown: 0x0e,
+        preset: 0x0c
     }
 };
 
-let app_state = {};
 let notifier;
 let writer;
 
-let draw;
+let drawer;
 
 function set_drawer(d) {
-    draw = d;
+    drawer = d;
 }
 
 function cleanUp() {
     console.log("Disconnetted");
-    app_state = {connected: false};
-    draw(app_state);
+    drawer.init();
 }
 
 function handleNotifications(event) {
@@ -37,17 +37,34 @@ function handleNotifications(event) {
     validateMessage(response);
 
     if (response[4] === guitar.opcodes.battery) {
-/*jslint-disable*/
-        draw({...app_state, battery: Number(response[5])});
-/*jslint-enable*/
+        return drawer.update({battery: response[5]});
+    }
+    if (response[4] === guitar.opcodes.autoshutdown) {
+        return drawer.update({autoshutdown: response[5]});
+    }
+    if (response[4] === guitar.opcodes.preset) {
+
+        return drawer.update(
+            {preset: {switch: response[5], offsets: response.slice(6, 10)}}
+        );
     }
 }
 
 let server;
 
 function disconnect() {
-    server.disconnect();
-    cleanUp();
+    if (server?.connected) {
+        server.disconnect();
+    }
+}
+
+async function set_shutdown(event) {
+    const selection = Number(event.currentTarget.getAttribute("data"));
+    await send([0x00, guitar.opcodes.autoshutdown, selection]);
+}
+
+async function set_preset(ignore) {
+    return await 1;
 }
 
 async function connect() {
@@ -72,9 +89,7 @@ async function connect() {
             handleNotifications
         );
 
-        app_state = {connected: true};
-
-        draw(app_state);
+        drawer.update({connected: true});
 
     } catch (e) {
         console.log("ERROR", e);
@@ -114,19 +129,18 @@ function validateMessage(m) {
 async function send(m) {
     const full_message = prepareMessage(m);
     validateMessage(full_message);
+    console.log("sending ", full_message);
     await writer.writeValueWithoutResponse(
         Uint8Array.from(full_message)
     );
 }
 
-async function ask({prop, state}) { //jslint-ignore-line
-/*jslint-disable*/
-    app_state = {...state};
-/*jslint-enable*/
-    if (prop === "battery") {
-        await send([0x10, guitar.opcodes.battery]);
+async function ask(prop) {
+    if (!Object.keys(guitar.opcodes).includes(prop)) {
+        throw new Error(`Opcode not valid: ${prop}`);
     }
 
+    await send([0x10, guitar.opcodes[prop]]);
 }
 
 async function order() {
@@ -143,5 +157,8 @@ export default Object.freeze({
     order,
     receive,
     set_drawer,
-    disconnect
+    disconnect,
+    reset: disconnect,
+    set_shutdown,
+    set_preset
 });

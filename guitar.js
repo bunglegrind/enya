@@ -36,6 +36,8 @@ function handleNotifications(event) {
 
     validateMessage(response);
 
+    console.log("Received: ", response);
+
     if (response[4] === guitar.opcodes.battery) {
         return drawer.update({battery: response[5]});
     }
@@ -63,8 +65,17 @@ async function set_shutdown(event) {
     await send([0x00, guitar.opcodes.autoshutdown, selection]);
 }
 
-async function set_preset(ignore) {
-    return await 1;
+async function set_preset({currentTarget}) {
+    const position = Number(currentTarget.getAttribute("data-row"));
+    const offset = Number(currentTarget.getAttribute("data-element"));
+
+    const preset = drawer.retrieve("preset");
+    await send([
+        0x00,
+        guitar.opcodes.preset,
+        position,
+        ...preset.offsets.with(position, offset)
+    ]);
 }
 
 async function connect() {
@@ -143,19 +154,9 @@ async function ask(prop) {
     await send([0x10, guitar.opcodes[prop]]);
 }
 
-async function order() {
-    return await 1;
-}
-
-async function receive() {
-    return await 1;
-}
-
 export default Object.freeze({
     connect,
     ask,
-    order,
-    receive,
     set_drawer,
     disconnect,
     reset: disconnect,

@@ -1,8 +1,6 @@
 /*jslint browser, unordered*/
-import guitar from "./guitar.js";
 
-
-export default Object.freeze(function (state, dom) {
+export default Object.freeze(function (state, dom, guitar) {
 
     function highlight_active(props) {
         if (props.data !== state.autoshutdown) {
@@ -30,85 +28,101 @@ export default Object.freeze(function (state, dom) {
             dom.button({
                 id: "disconnect",
                 click: guitar.disconnect
-            })("Disconnect")
+            })("Disconnect"),
+            dom.button({
+                id: "edit",
+                click: guitar.disconnect
+            })("Edit"),
+            dom.button({
+                id: "backup",
+                click: guitar.disconnect
+            })("Backup"),
+            dom.button({
+                id: "restore",
+                click: guitar.disconnect
+            })("Restore"),
+            dom.button({
+                id: "mixer",
+                click: guitar.disconnect
+            })("⚙")
         ),
         dom.main("main")(
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 0,
                 "data-element": 0,
                 click: guitar.set_preset
             }))("0"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 0,
                 "data-element": 1,
                 click: guitar.set_preset
             }))("1"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 0,
                 "data-element": 2,
                 click: guitar.set_preset
             }))("2"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 0,
                 "data-element": 3,
                 click: guitar.set_preset
             }))("3"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 1,
                 "data-element": 0,
                 click: guitar.set_preset
             }))("0"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 1,
                 "data-element": 1,
                 click: guitar.set_preset
             }))("1"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 1,
                 "data-element": 2,
                 click: guitar.set_preset
             }))("2"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 1,
                 "data-element": 3,
                 click: guitar.set_preset
             }))("3"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 2,
                 "data-element": 0,
                 click: guitar.set_preset
             }))("0"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 2,
                 "data-element": 1,
                 click: guitar.set_preset
             }))("1"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 2,
                 "data-element": 2,
                 click: guitar.set_preset
             }))("2"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 2,
                 "data-element": 3,
                 click: guitar.set_preset
             }))("3"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 3,
                 "data-element": 0,
                 click: guitar.set_preset
             }))("0"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 3,
                 "data-element": 1,
                 click: guitar.set_preset
             }))("1"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 3,
                 "data-element": 2,
                 click: guitar.set_preset
             }))("2"),
-            dom.div(highlight_element({
+            dom.button(highlight_element({
                 "data-row": 3,
                 "data-element": 3,
                 click: guitar.set_preset
@@ -117,22 +131,22 @@ export default Object.freeze(function (state, dom) {
         dom.footer("footer")(
             dom.div("battery")(state.battery + "% 🔋"),
             dom.div("autoshutdown")(
-                dom.span(
+                dom.button(
                     highlight_active(
                         {id: "0", data: 0, click: guitar.set_shutdown}
                     )
                 )("0"),
-                dom.span(
+                dom.button(
                     highlight_active(
                         {id: "15", data: 1, click: guitar.set_shutdown}
                     )
                 )("15m"),
-                dom.span(
+                dom.button(
                     highlight_active(
                         {id: "30", data: 2, click: guitar.set_shutdown}
                     )
                 )("30m"),
-                dom.span(
+                dom.button(
                     highlight_active(
                         {id: "45", data: 3, click: guitar.set_shutdown}
                     )

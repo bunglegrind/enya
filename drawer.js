@@ -1,7 +1,7 @@
 /*jslint browser, unordered*/
 import dom_builder from "./lib/dom.js";
-import connect from "./connect.js";
-import main from "./main.js";
+import connect from "./templates/connect.js";
+import main from "./templates/main.js";
 
 function factory(root, doc, guitar) {
     const dom = dom_builder(doc);
@@ -21,10 +21,14 @@ function factory(root, doc, guitar) {
         draw();
     }
 
+    function retrieve(prop) {
+        return state[prop];
+    }
+
 
     function draw() {
         if (!state.connected) {
-            root.replaceChildren(connect(dom));
+            root.replaceChildren(connect(dom, guitar));
             return;
         }
         if (state.battery === undefined) {
@@ -37,10 +41,10 @@ function factory(root, doc, guitar) {
             return guitar.ask("preset");
         }
 
-        root.replaceChildren(...main(state, dom));
+        root.replaceChildren(...main(state, dom, guitar));
     }
 
-    const drawer = Object.freeze({update, init});
+    const drawer = Object.freeze({update, init, retrieve});
     guitar.set_drawer(drawer);
 
     return drawer;

@@ -5,8 +5,12 @@ const guitar = {
     opcodes: {
         battery: 0x11,
         autoshutdown: 0x0e,
-        preset: 0x0c
-    }
+        preset: 0x0c,
+        mixer: [0x00, 0x01, 0x02, 0x03, 0x04, 0x05],
+        effects: [0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b]
+    },
+    mixer_length: 6,
+    effects_length: 6
 };
 
 let notifier;

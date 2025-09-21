@@ -2,6 +2,8 @@
 import dom_builder from "./lib/dom.js";
 import connect from "./templates/connect.js";
 import main from "./templates/main.js";
+import mixer from "./templates/mixer.js";
+import effects from "./templates/effects.js";
 
 function factory(root, doc, guitar) {
     const dom = dom_builder(doc);
@@ -28,8 +30,7 @@ function factory(root, doc, guitar) {
 
     function draw() {
         if (!state.connected) {
-            root.replaceChildren(connect(dom, guitar));
-            return;
+            return root.replaceChildren(connect(dom, guitar));
         }
         if (state.battery === undefined) {
             return guitar.ask("battery");
@@ -41,7 +42,24 @@ function factory(root, doc, guitar) {
             return guitar.ask("preset");
         }
 
-        root.replaceChildren(...main(state, dom, guitar));
+        if (state.mixer !== undefined) {
+            if (state.mixer.length !== guitar.mixer_length()) {
+                return guitar.ask("mixer", state.mixer.length);
+            }
+
+            return root.replaceChildren(...mixer(state, dom, guitar));
+        }
+
+        if (state.effects !== undefined) {
+            if (state.effects.length !== guitar.effects_length()) {
+                return guitar.ask("effects", state.effects.length);
+            }
+
+            return root.replaceChildren(...effects(state, dom, guitar));
+        }
+
+
+        return root.replaceChildren(...main(state, dom, guitar));
     }
 
     const drawer = Object.freeze({update, init, retrieve});

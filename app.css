@@ -61,6 +61,7 @@ footer {
     display: inline-block;
     margin: 0 0.3em;
     border-radius: 50px;
+    border-style: solid;
     background-color: #aaa;
     color: #fff;
     padding: 10px 3px;

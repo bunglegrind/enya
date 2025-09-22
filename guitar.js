@@ -165,5 +165,7 @@ export default Object.freeze({
     disconnect,
     reset: disconnect,
     set_shutdown,
-    set_preset
+    set_preset,
+    get_effects_length: () => guitar.effects_length,
+    get_mixer_length: () => guitar.mixer_length,
 });

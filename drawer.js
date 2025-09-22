@@ -43,7 +43,7 @@ function factory(root, doc, guitar) {
         }
 
         if (state.mixer !== undefined) {
-            if (state.mixer.length !== guitar.mixer_length()) {
+            if (state.mixer.length !== guitar.mget_ixer_length()) {
                 return guitar.ask("mixer", state.mixer.length);
             }
 
@@ -51,8 +51,8 @@ function factory(root, doc, guitar) {
         }
 
         if (state.effects !== undefined) {
-            if (state.effects.length !== guitar.effects_length()) {
-                return guitar.ask("effects", state.effects.length);
+            if (Object.keys(state.effects).length !== guitar.get_effects_length()) {
+                return guitar.ask("effects", Object.keys(state.effects).length);
             }
 
             return root.replaceChildren(...effects(state, dom, guitar));

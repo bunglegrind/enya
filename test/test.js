@@ -1,5 +1,5 @@
 /*jslint browser, unordered*/
-import guitar from "./guitar-mock.js";
+import guitar from "./guitar.js";
 import drawer_factory from "../drawer.js";
 
 function init() {

@@ -6,24 +6,27 @@ let handle_notifications;
 let clean;
 
 const guitar_mock = {
-    defaults: {
-        0x11: [50],
-        0x0e: [1],
-        0x0c: [0, 0, 0, 0, 0],
-        0x06: [1, 1, 10, 65, 23, 10, 30, 40],
-        0x07: [1, 3, 18, 3, 5, 9, 22],
-        0x08: [1, 2, 23, 82],
-        0x09: [1, 12, 56, 89, 11],
-        0x0a: [1, 0x01, 0x2c, 23, 14],
-        0x0b: [0, 45, 78],
-        0x00: [45],
-        0x01: [45],
-        0x02: [45],
-        0x03: [45],
-        0x04: [45],
-        0x05: [45]
-    }
-}
+    defaults: [
+        [45], //0x00
+        [45], //0x01
+        [45], //0x02
+        [45], //0x03
+        [45], //0x04
+        [45], //0x05
+        [1, 1, 10, 65, 23, 10, 30, 40], //0x06
+        [1, 3, 18, 3, 5, 9, 22], //0x07
+        [1, 2, 23, 82], //0x08
+        [1, 12, 56, 89, 11], //0x09
+        [1, 0x01, 0x2c, 23, 14], //0x0a
+        [0, 45, 78], //0x0b
+        [0, 0, 0, 0, 0], //0x0c
+        [], //0x0d
+        [1], //0x0e
+        [], //0x0f
+        [], //0x10
+        [50] //0x11
+    ]
+};
 
 function connect({cleanUp}) {
     clean = cleanUp;
@@ -46,11 +49,15 @@ function write(buffer) {
     let encoded_message;
 
     if (command[3] === 0x00) {
-        encoded_message = message_helper.encode([0x20, ...command.slice(4, command.length - 3)]);
+        encoded_message = message_helper.encode(
+            [0x20, ...command.slice(4, command.length - 3)]
+        );
     }
 
     if (command[3] === 0x10) {
-        encoded_message = message_helper.encode([0x20, command[4], ...guitar_mock.defaults[command[4]]]);
+        encoded_message = message_helper.encode(
+            [0x20, command[4], ...guitar_mock.defaults[command[4]]]
+        );
     }
 
     const event = Object.create(null);
@@ -58,7 +65,7 @@ function write(buffer) {
     event.target.value = new DataView(Uint8Array.from(encoded_message).buffer);
 
     return new Promise(function (resolve) {
-        setTimeout (resolve, 0);
+        setTimeout(resolve, 0);
     }).then(function () {
         handle_notifications(event);
     });
@@ -68,7 +75,7 @@ function start_notifications(handle) {
     handle_notifications = handle;
 
     return new Promise(function (resolve) {
-        setTimeout (resolve, 0);
+        setTimeout(resolve, 0);
     });
 }
 
@@ -78,4 +85,3 @@ export default Object.freeze({
     write,
     start_notifications
 });
-

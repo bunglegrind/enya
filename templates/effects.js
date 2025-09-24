@@ -1,7 +1,7 @@
 /*jslint browser, unordered*/
 import utils from "../utils.js";
 
-export default  Object.freeze(function (state, dom, guitar) {
+export default Object.freeze(function (state, dom, guitar) {
     return [
         dom.header("header")(
             dom.button({
@@ -16,6 +16,10 @@ export default  Object.freeze(function (state, dom, guitar) {
                 id: "load",
                 click: utils.load
             })("Load"),
+            dom.button({
+                id: "undo",
+                click: utils.load
+            })("Undo"),
             dom.button({
                 id: "mixer",
                 click: guitar.disconnect

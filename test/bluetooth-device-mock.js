@@ -35,7 +35,9 @@ function connect({cleanUp}) {
 
 function disconnect() {
     if (typeof clean === "function") {
-        clean();
+        const c = clean;
+        clean = undefined;
+        c();
     }
 }
 

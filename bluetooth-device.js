@@ -41,7 +41,7 @@ async function write(buffer) {
     );
 }
 
-Object.freeze({
+export default Object.freeze({
     connect,
     disconnect,
     write,

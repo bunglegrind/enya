@@ -1,4 +1,6 @@
 /*jslint browser, devel, unordered*/
+import device from "./bluetooth-device.js";
+
 const guitar = {
     name: "NOVA Go Sonic System",
     service: 0xab11,
@@ -13,8 +15,6 @@ const guitar = {
     effects_length: 6
 };
 
-let notifier;
-let writer;
 
 let drawer;
 
@@ -56,14 +56,6 @@ function handleNotifications(event) {
     }
 }
 
-let server;
-
-function disconnect() {
-    if (server?.connected) {
-        server.disconnect();
-    }
-}
-
 async function set_shutdown(event) {
     const selection = Number(event.currentTarget.getAttribute("data"));
     await send([0x00, guitar.opcodes.autoshutdown, selection]);
@@ -84,25 +76,13 @@ async function set_preset({currentTarget}) {
 
 async function connect() {
     try {
-        const device = await navigator.bluetooth.requestDevice({
-            filters: [{name: guitar.name}],
-            optionalServices: [guitar.service, 0x1801, 0x1800]
+        await device.connect({
+            name: guitar.name,
+            service: guitar.service,
+            cleanUp
         });
-        server = device.gatt;
-        await server.connect();
-        device.addEventListener("gattserverdisconnected", cleanUp);
-        const service = await device.gatt.getPrimaryService(guitar.service);
-        const chars = await service.getCharacteristics();
 
-        notifier = chars.find((c) => c.properties.notify);
-        writer = chars.find((c) => c.properties.writeWithoutResponse);
-
-        await notifier.startNotifications();
-
-        notifier.addEventListener(
-            "characteristicvaluechanged",
-            handleNotifications
-        );
+        device.start_notifications(handleNotifications);
 
         drawer.update({connected: true});
 
@@ -145,7 +125,7 @@ async function send(m) {
     const full_message = prepareMessage(m);
     validateMessage(full_message);
     console.log("sending ", full_message);
-    await writer.writeValueWithoutResponse(
+    await device.write(
         Uint8Array.from(full_message)
     );
 }
@@ -162,10 +142,10 @@ export default Object.freeze({
     connect,
     ask,
     set_drawer,
-    disconnect,
-    reset: disconnect,
+    disconnect: device.disconnect,
+    reset: device.disconnect,
     set_shutdown,
     set_preset,
     get_effects_length: () => guitar.effects_length,
-    get_mixer_length: () => guitar.mixer_length,
+    get_mixer_length: () => guitar.mixer_length
 });

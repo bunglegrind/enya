@@ -31,7 +31,7 @@ export default Object.freeze(function (state, dom, guitar) {
             })("Disconnect"),
             dom.button({
                 id: "edit",
-                click: guitar.edit
+                click: guitar.edit_preset
             })("Edit"),
             dom.button({
                 id: "backup",

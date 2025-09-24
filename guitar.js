@@ -11,7 +11,7 @@ function g(device) {
             autoshutdown: 0x0e,
             preset: 0x0c,
             mixer: [0x00, 0x01, 0x02, 0x03, 0x04, 0x05],
-            effects: [0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b]
+            effects: {amp: 0x06, eq: 0x07, mod: 0x08, noise: 0x09, delay: 0x0a, reverb: 0x0b}
         },
         mixer_length: 6,
         effects_length: 6
@@ -44,10 +44,21 @@ function g(device) {
             return drawer.update({autoshutdown: response[5]});
         }
         if (response[4] === guitar.opcodes.preset) {
-
             return drawer.update(
                 {preset: {switch: response[5], offsets: response.slice(6, 10)}}
             );
+        }
+        if (Object.values(guitar.opcodes.effects).includes(response[4])) {
+            const effects = {...drawer.retrieve("effects")};
+            const effect = Object.entries(guitar.opcodes.effects).find(
+                ([, v]) => v === response[4]
+            );
+            effects[effect[0]] = response.slice(5, response.length - 3);
+            return drawer.update({
+                effects: {
+                    ...effects,
+                }
+            });
         }
     }
 
@@ -66,6 +77,13 @@ function g(device) {
             guitar.opcodes.preset,
             position,
             ...preset.offsets.with(position, offset)
+        ]);
+    }
+
+    async function edit_preset() {
+        await send([
+            0x10,
+            guitar.opcodes.effects.amp
         ]);
     }
 
@@ -95,12 +113,24 @@ function g(device) {
         );
     }
 
-    async function ask(prop) {
+    async function ask(prop, offset) {
         if (!Object.keys(guitar.opcodes).includes(prop)) {
             throw new Error(`Opcode not valid: ${prop}`);
         }
 
-        await send([0x10, guitar.opcodes[prop]]);
+        const m = [0x10];
+
+        if (typeof guitar.opcodes[prop] === "object") {
+            m.push(Object.entries(guitar.opcodes[prop])[offset][1]);
+        } else {
+            m.push(guitar.opcodes[prop]);
+        }
+
+        await send(m);
+    }
+
+    function back() {
+        drawer.update({effects: undefined});
     }
 
     return Object.freeze({
@@ -112,7 +142,9 @@ function g(device) {
         set_shutdown,
         set_preset,
         get_effects_length: () => guitar.effects_length,
-        get_mixer_length: () => guitar.mixer_length
+        get_mixer_length: () => guitar.mixer_length,
+        edit_preset,
+        back
     });
 }
 

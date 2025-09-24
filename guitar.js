@@ -10,8 +10,22 @@ function g(device) {
             battery: 0x11,
             autoshutdown: 0x0e,
             preset: 0x0c,
-            mixer: [0x00, 0x01, 0x02, 0x03, 0x04, 0x05],
-            effects: {amp: 0x06, eq: 0x07, mod: 0x08, noise: 0x09, delay: 0x0a, reverb: 0x0b}
+            mixer: {
+                guitar: 0x00,
+                otg: 0x01,
+                bluetooth: 0x02,
+                box: 0x03,
+                ear: 0x04,
+                line: 0x05
+            },
+            effects: {
+                amp: 0x06,
+                eq: 0x07,
+                mod: 0x08,
+                noise: 0x09,
+                delay: 0x0a,
+                reverb: 0x0b
+            }
         },
         mixer_length: 6,
         effects_length: 6
@@ -49,15 +63,23 @@ function g(device) {
             );
         }
         if (Object.values(guitar.opcodes.effects).includes(response[4])) {
-            const effects = {...drawer.retrieve("effects")};
+            const effects = Object.assign({}, drawer.retrieve("effects"));
             const effect = Object.entries(guitar.opcodes.effects).find(
-                ([, v]) => v === response[4]
+                ([ignore, v]) => v === response[4] //jslint-ignore-line
             );
             effects[effect[0]] = response.slice(5, response.length - 3);
             return drawer.update({
-                effects: {
-                    ...effects,
-                }
+                effects
+            });
+        }
+        if (Object.values(guitar.opcodes.mixer).includes(response[4])) {
+            const mixer = Object.assign({}, drawer.retrieve("mixer"));
+            const volume = Object.entries(guitar.opcodes.mixer).find(
+                ([ignore, v]) => v === response[4] //jslint-ignore-line
+            );
+            mixer[volume[0]] = response.slice(5, response.length - 3);
+            return drawer.update({
+                mixer
             });
         }
     }
@@ -84,6 +106,13 @@ function g(device) {
         await send([
             0x10,
             guitar.opcodes.effects.amp
+        ]);
+    }
+
+    async function mixer() {
+        await send([
+            0x10,
+            guitar.opcodes.mixer.guitar
         ]);
     }
 
@@ -130,7 +159,7 @@ function g(device) {
     }
 
     function back() {
-        drawer.update({effects: undefined});
+        drawer.update({effects: undefined, mixer: undefined});
     }
 
     return Object.freeze({
@@ -144,6 +173,7 @@ function g(device) {
         get_effects_length: () => guitar.effects_length,
         get_mixer_length: () => guitar.mixer_length,
         edit_preset,
+        mixer,
         back
     });
 }

@@ -43,7 +43,7 @@ export default Object.freeze(function (state, dom, guitar) {
             })("Restore"),
             dom.button({
                 id: "mixer",
-                click: guitar.disconnect
+                click: guitar.mixer
             })("⚙")
         ),
         dom.main("main")(

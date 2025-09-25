@@ -4,10 +4,44 @@ import utils from "../utils.js";
 
 export default Object.freeze(function (state, dom, guitar) {
     function popup(prompt, cb) {
-        dom.div("popup")(
+        function disable(event) {
+            const popup = document.body.querySelector("#popup");
+            if (popup) {
+                event.stopImmediatePropagation();
+                document.querySelector("#app").classList.remove("shadow");
+                document.body.querySelector("#popup").remove();
+                document.querySelector("#app").removeEventListener("click", disable, true);
+            }
+        }
+        document.querySelector("#app").classList.add("shadow");
+        document.querySelector("#app").addEventListener("click", disable, true);
+
+        document.body.append(dom.div("popup")(
             dom.p("prompt")(prompt),
             dom.input({type: "text"}),
-            dom.button({})
+                dom.div({})(
+                    dom.button({
+                        id: "Confirm",
+                        click: function (event) {
+                            const popup = event.currentTarget.parentElement.parentElement;
+                            let name = popup.querySelector("input").value;
+                            if (name) {
+                                popup.remove();
+                                document.querySelector("#app").classList.remove("shadow");
+                                document.querySelector("#app").removeEventListener("click", disable, true);
+                                cb(name);
+                            }
+                        }
+                    })("Confirm"),
+                    dom.button({click: function (event) {
+                            const popup = event.currentTarget.parentElement.parentElement;
+                            document.querySelector("#app").classList.remove("shadow");
+                            document.querySelector("#app").removeEventListener("click", disable, true);
+                            popup.remove();
+                        }}
+                    )("Cancel")
+                )
+            )
         );
     }
     return [
@@ -18,7 +52,8 @@ export default Object.freeze(function (state, dom, guitar) {
             })("<="),
             dom.button({
                 id: "save",
-                click: function () {
+                click: function (event) {
+                    event.stopImmediatePropagation();
                     popup("Please enter a filename: ", function (name) {
                         utils.save(state.effects, name);
                     });
@@ -34,7 +69,7 @@ export default Object.freeze(function (state, dom, guitar) {
             })("Undo"),
             dom.button({
                 id: "mixer",
-                click: guitar.disconnect
+                click: guitar.mixer
             })("⚙")
         ),
         dom.main("effects")(JSON.stringify(state))

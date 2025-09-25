@@ -78,3 +78,27 @@ footer {
     align-content:center;
     width: 30%
 }
+
+#popup {
+    position: absolute;
+    width:200px;
+    top:2em;
+    left: calc(50vw - 110px);
+    z-index: 1000;
+    background-color: #fff;
+    padding: 1em;
+    border: 4px solid;
+}
+
+#popup button {
+    margin: 20px 5px;
+    padding: 0.2em 1em;
+}
+
+.shadow {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#popup p {
+    text-align: center;
+}

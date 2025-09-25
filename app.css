@@ -83,7 +83,7 @@ footer {
     position: absolute;
     width:200px;
     top:2em;
-    left: calc(50vw - 110px);
+    left: calc(50vw - 120px);
     z-index: 1000;
     background-color: #fff;
     padding: 1em;

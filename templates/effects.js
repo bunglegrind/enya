@@ -5,12 +5,16 @@ import utils from "../utils.js";
 export default Object.freeze(function (state, dom, guitar) {
     function popup(prompt, cb) {
         function disable(event) {
-            const popup = document.body.querySelector("#popup");
-            if (popup) {
+            const container = document.body.querySelector("#popup");
+            if (container) {
                 event.stopImmediatePropagation();
                 document.querySelector("#app").classList.remove("shadow");
                 document.body.querySelector("#popup").remove();
-                document.querySelector("#app").removeEventListener("click", disable, true);
+                document.querySelector("#app").removeEventListener(
+                    "click",
+                    disable,
+                    true
+                );
             }
         }
         document.querySelector("#app").classList.add("shadow");
@@ -19,30 +23,42 @@ export default Object.freeze(function (state, dom, guitar) {
         document.body.append(dom.div("popup")(
             dom.p("prompt")(prompt),
             dom.input({type: "text"}),
-                dom.div({})(
-                    dom.button({
-                        id: "Confirm",
-                        click: function (event) {
-                            const popup = event.currentTarget.parentElement.parentElement;
-                            let name = popup.querySelector("input").value;
-                            if (name) {
-                                popup.remove();
-                                document.querySelector("#app").classList.remove("shadow");
-                                document.querySelector("#app").removeEventListener("click", disable, true);
-                                cb(name);
-                            }
+            dom.div({})(
+                dom.button({
+                    id: "Confirm",
+                    click: function () {
+                        const container = document.body.querySelector(
+                            "#popup"
+                        );
+                        let name = container.querySelector("input").value;
+                        if (name) {
+                            container.remove();
+                            document.querySelector("#app").classList.remove(
+                                "shadow"
+                            );
+                            document.querySelector("#app").removeEventListener(
+                                "click",
+                                disable,
+                                true
+                            );
+                            cb(name);
                         }
-                    })("Confirm"),
-                    dom.button({click: function (event) {
-                            const popup = event.currentTarget.parentElement.parentElement;
-                            document.querySelector("#app").classList.remove("shadow");
-                            document.querySelector("#app").removeEventListener("click", disable, true);
-                            popup.remove();
-                        }}
-                    )("Cancel")
-                )
+                    }
+                })("Confirm"),
+                dom.button({click: function () {
+                    const container = document.body.querySelector("#popup");
+                    document.querySelector("#app").classList.remove(
+                        "shadow"
+                    );
+                    document.querySelector("#app").removeEventListener(
+                        "click",
+                        disable,
+                        true
+                    );
+                    container.remove();
+                }})("Cancel")
             )
-        );
+        ));
     }
     return [
         dom.header("header")(

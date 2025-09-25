@@ -102,3 +102,18 @@ footer {
 #popup p {
     text-align: center;
 }
+
+input[type=file] {
+    display:none;
+}
+
+label#load {
+    box-sizing: border-box;
+    background-color: buttonface;
+    margin: 0em;
+    padding-block: 1px;
+    padding-inline: 6px;
+    border-width: 2px;
+    border-style: outset;
+    border-color: buttonborder;
+}

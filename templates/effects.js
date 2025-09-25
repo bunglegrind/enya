@@ -75,13 +75,13 @@ export default Object.freeze(function (state, dom, guitar) {
                     });
                 }
             })("Save..."),
-            dom.button({
+            dom.label({
                 id: "load",
                 click: utils.load
-            })("Load"),
+            })(dom.input({type: "file"}), "Load"),
             dom.button({
                 id: "undo",
-                click: utils.load
+                change: utils.load
             })("Undo"),
             dom.button({
                 id: "mixer",

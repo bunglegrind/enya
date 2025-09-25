@@ -12,5 +12,11 @@ export default Object.freeze({
         link.click();
         URL.revokeObjectURL(link.href);
     },
-    load: () => 1
+    load: async function ({target}) {
+        const [file] = target.children[0]?.files;
+
+        if (file) {
+            console.log(await file.text());
+        }
+    }
 });

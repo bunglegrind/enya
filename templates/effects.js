@@ -78,7 +78,7 @@ export default Object.freeze(function (state, dom, guitar) {
             dom.label({
                 id: "load",
                 click: utils.load
-            })(dom.input({type: "file"}), "Load"),
+            })(dom.input({type: "file", accept: "application/json"}), "Load"),
             dom.button({
                 id: "undo",
                 change: utils.load

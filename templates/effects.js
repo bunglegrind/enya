@@ -1,4 +1,4 @@
-/*jslint browser, unordered*/
+/*jslint browser, devel, unordered*/
 import utils from "../utils.js";
 
 
@@ -11,21 +11,28 @@ export default Object.freeze(function (state, dom, guitar) {
             })("<="),
             dom.button({
                 id: "save",
-                click: function (event) {
+                click: async function (event) {
                     event.stopImmediatePropagation();
-                    utils.enter_name_popup(dom, "Please enter a filename: ", function (name) {
+                    const name = await utils.enter_name_popup(
+                        dom,
+                        "Please enter a filename: "
+                    );
+                    if (name) {
                         utils.save(state.effects, name);
-                    });
+                    }
                 }
             })("Save..."),
             dom.label({
                 id: "load",
                 change: async function ({target}) {
-                    const loaded_preset = await utils.load(target);
-                    utils.proceed_popup(dom, "The current preset configuration will be deleted. Proceed?",
-                        function () {
-                        console.log(loaded_preset);
-                        });
+                    const confirm = await utils.proceed_popup(
+                        dom,
+                        "The current preset confwill be deleted. Proceed?"
+                    );
+                    if (confirm) {
+                        await guitar.load_preset(await utils.load(target));
+                    }
+                    target.value = "";
                 }
             })(dom.input({type: "file", accept: "application/json"}), "Load"),
             dom.button({

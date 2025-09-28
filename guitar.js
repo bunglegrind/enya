@@ -6,18 +6,46 @@ function g(device) {
     const guitar = {
         name: "NOVA Go Sonic System",
         service: 0xab11,
-        opcodes: {
-            battery: 0x11,
-            autoshutdown: 0x0e,
-            preset: 0x0c,
-            mixer: {
-                guitar: 0x00,
-                otg: 0x01,
-                bluetooth: 0x02,
-                box: 0x03,
-                ear: 0x04,
-                line: 0x05
+        commands: {
+            guitar: {
+                opcode: 0x00,
+                parameters: [{min: 0, max: 100}],
+                group: "mixer"
             },
+            otg: {
+                opcode: 0x01,
+                parameters: [{min: 0, max: 100}],
+                group: "mixer"
+            },
+            bluetooth: {
+                opcode: 0x02,
+                parameters: [{min: 0, max: 100}],
+                group: "mixer"
+            },
+            box: {
+                opcode: 0x03,
+                parameters: [{min: 0, max: 100}],
+                group: "mixer"
+            },
+            ear: {
+                opcode: 0x04,
+                parameters: [{min: 0, max: 100}],
+                group: "mixer"
+            },
+            line: {
+                opcode: 0x05,
+                parameters: [{min: 0, max: 100}],
+                group: "mixer"
+            },
+            battery: {opcode: 0x11, parameters: [{min: 0, max: 100}],
+            autoshutdown: {opcode: 0x0e, parameters: [{min: 0, max: 100}],
+            preset: {opcode: 0x0c, parameters: [
+                {name: "switch", min: 0, max: 3},
+                {name: "offset-0", min: 0, max: 3},
+                {name: "offset-1", min: 0, max: 3},
+                {name: "offset-2", min: 0, max: 3},
+                {name: "offset-3", min: 0, max: 3}
+            ]},
             effects: {
                 amp: 0x06,
                 eq: 0x07,
@@ -27,8 +55,27 @@ function g(device) {
                 reverb: 0x0b
             }
         },
-        mixer_length: 6,
-        effects_length: 6
+        preset: {
+            amp: {
+                type: {min: 0, max: 1},
+                status: {min: 0, max: 1},
+                preamp: {min: 0, max: 100},
+                master: {min: 0, max: 100},
+                bass: {min: 0, max: 100},
+                middle: {min: 0, max: 100},
+                treble: {min: 0, max: 100},
+                presence: {min: 0, max: 100}
+            },
+            eq: {
+                status: {min: 0, max: 1},
+                pregain: {min: -6, max: 6},
+                hz80: {min: -12, max: 12},
+                hz240: {min: -12, max: 12},
+                hz750: {min: -12, max: 12},
+                hz80: {min: -12, max: 12},
+
+            }
+        }
     };
 
 
@@ -142,6 +189,14 @@ function g(device) {
         );
     }
 
+    function validate(preset, guitar) {
+        return true;
+    }
+
+    async function load_preset(preset) {
+        validate(preset, guitar);
+    }
+
     async function ask(prop, offset) {
         if (!Object.keys(guitar.opcodes).includes(prop)) {
             throw new Error(`Opcode not valid: ${prop}`);
@@ -170,6 +225,7 @@ function g(device) {
         reset: device.disconnect,
         set_shutdown,
         set_preset,
+        load_preset,
         get_effects_length: () => guitar.effects_length,
         get_mixer_length: () => guitar.mixer_length,
         edit_preset,

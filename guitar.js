@@ -250,7 +250,19 @@ function g(device) {
     }
 
     async function load_preset(preset) {
-        validate(preset, guitar);
+        const effects = Object.values(guitar.commands).filter(({group}) => group === "effects");
+        if (
+            !validate(
+                preset,
+                effects
+            )
+        ) {
+            return "File not compatible";
+        }
+
+        Object.keys(effects);
+
+        return "File loaded";
     }
 
     async function ask(prop, par_offset) {

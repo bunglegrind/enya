@@ -30,7 +30,11 @@ export default Object.freeze(function (state, dom, guitar) {
                         "The current preset confwill be deleted. Proceed?"
                     );
                     if (confirm) {
-                        await guitar.load_preset(await utils.load(target));
+                        const return_message = await guitar.load_preset(
+                            await utils.load(target)
+                        );
+
+                        await utils.confirm_popup(dom, return_message);
                     }
                     target.value = "";
                 }

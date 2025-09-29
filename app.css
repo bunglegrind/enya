@@ -95,6 +95,11 @@ footer {
     padding: 0.2em 1em;
 }
 
+#popup #ok {
+    display: block;
+    margin: 20px auto;
+}
+
 .shadow {
     background-color: rgba(0, 0, 0, 0.5);
 }

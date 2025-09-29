@@ -124,8 +124,8 @@ function g(device) {
                 {name: "offset-1", min: 0, max: 3},
                 {name: "offset-2", min: 0, max: 3},
                 {name: "offset-3", min: 0, max: 3}
-            ]},
-        },
+            ]}
+        }
     };
 
 
@@ -159,9 +159,9 @@ function g(device) {
                 {preset: {switch: response[5], offsets: response.slice(6, 10)}}
             );
         }
-        const effects_opcodes = Object.values(guitar.commands)
-            .filter((v) => v.group === "effects")
-            .map(({opcode}) => opcode);
+        const effects_opcodes = Object.values(guitar.commands).filter(
+            (v) => v.group === "effects"
+        ).map((a) => a.opcode);
         if (effects_opcodes.includes(response[4])) {
             const effects = Object.assign({}, drawer.retrieve("effects"));
             const effect = Object.entries(guitar.commands).find(
@@ -172,9 +172,10 @@ function g(device) {
                 effects
             });
         }
-        const mixer_opcodes = Object.values(guitar.commands)
-            .filter((v) => v.group === "mixer")
-            .map(({opcode}) => opcode);
+        const mixer_opcodes = Object.values(guitar.commands).filter(
+            (v) => v.group === "mixer"
+        );
+
         if (mixer_opcodes.includes(response[4])) {
             const mixer = Object.assign({}, drawer.retrieve("mixer"));
             const volume = Object.entries(guitar.commands).find(
@@ -246,11 +247,13 @@ function g(device) {
     }
 
     function validate(preset, guitar) {
-        return true;
+        return guitar && preset;
     }
 
     async function load_preset(preset) {
-        const effects = Object.values(guitar.commands).filter(({group}) => group === "effects");
+        const effects = Object.values(guitar.commands).filter(
+            (a) => a.group === "effects"
+        );
         if (
             !validate(
                 preset,
@@ -262,14 +265,14 @@ function g(device) {
 
         Object.keys(effects);
 
-        return "File loaded";
+        return await "File loaded";
     }
 
     async function ask(prop, par_offset) {
         const groups = Object.values(guitar.commands).reduce(
-            (acc, {group}) => (
-                group && !acc.includes(group)
-                ? [...acc, group]
+            (acc, item) => (
+                (item.group && !acc.includes(item.group))
+                ? [...acc, item.group]
                 : acc
             ),
             []
@@ -286,7 +289,7 @@ function g(device) {
         if (groups.includes(prop)) {
             m.push(
                 Object.values(guitar.commands).find(
-                    ({group, offset}) => group === prop && offset === par_offset
+                    (a) => a.group === prop && a.offset === par_offset
                 ).opcode
             );
         } else {
@@ -301,7 +304,9 @@ function g(device) {
     }
 
     function get_group_elements(group) {
-        return Object.values(guitar.commands).filter((v) => v.group === group).length;
+        return Object.values(guitar.commands).filter(
+            (v) => v.group === group
+        ).length;
     }
 
     return Object.freeze({

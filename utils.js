@@ -39,8 +39,8 @@ function popup(dom, prompt, inner, buttons = 2) {
     const enable = disable(document.querySelector("#app"));
     const cancel_label = (
         buttons === 2
-            ? "Cancel"
-            : "OK"
+        ? "Cancel"
+        : "OK"
     );
 
     return new Promise(function (resolve) {
@@ -50,20 +50,22 @@ function popup(dom, prompt, inner, buttons = 2) {
             dom.div({})(
                 (
                     buttons === 2
-                        ? dom.button({
-                            id: "Confirm",
-                            click: function () {
-                                if (inner.validate()) {
-                                    const container = document.body.querySelector(
+                    ? dom.button({
+                        id: "Confirm",
+                        click: function () {
+                            if (inner.validate()) {
+                                const container = (
+                                    document.body.querySelector(
                                         "#popup"
-                                    );
-                                    enable();
-                                    container.remove();
-                                    resolve(inner.value());
-                                }
+                                    )
+                                );
+                                enable();
+                                container.remove();
+                                resolve(inner.value());
                             }
-                        })("Confirm")
-                        : ""
+                        }
+                    })("Confirm")
+                    : ""
                 ),
                 dom.button({
                     click: function () {
@@ -114,6 +116,6 @@ export default Object.freeze({
         return popup(dom, prompt);
     },
     confirm_popup: function (dom, prompt) {
-        return popup(dom, prompt, undefined, 1)
+        return popup(dom, prompt, undefined, 1);
     }
 });

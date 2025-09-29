@@ -9,36 +9,115 @@ function g(device) {
         commands: {
             guitar: {
                 opcode: 0x00,
+                offset: 0,
                 parameters: [{min: 0, max: 100}],
                 group: "mixer"
             },
             otg: {
                 opcode: 0x01,
+                offset: 1,
                 parameters: [{min: 0, max: 100}],
                 group: "mixer"
             },
             bluetooth: {
                 opcode: 0x02,
+                offset: 2,
                 parameters: [{min: 0, max: 100}],
                 group: "mixer"
             },
             box: {
                 opcode: 0x03,
+                offset: 3,
                 parameters: [{min: 0, max: 100}],
                 group: "mixer"
             },
             ear: {
                 opcode: 0x04,
+                offset: 4,
                 parameters: [{min: 0, max: 100}],
                 group: "mixer"
             },
             line: {
                 opcode: 0x05,
+                offset: 5,
                 parameters: [{min: 0, max: 100}],
                 group: "mixer"
             },
-            battery: {opcode: 0x11, parameters: [{min: 0, max: 100}],
-            autoshutdown: {opcode: 0x0e, parameters: [{min: 0, max: 100}],
+            amp: {
+                opcode: 0x06,
+                offset: 0,
+                parameters: [
+                    {name: "status", min: 0, max: 1},
+                    {name: "type", min: 0, max: 1},
+                    {name: "volume/preamp", min: 0, max: 100},
+                    {name: "master", min: 0, max: 100},
+                    {name: "bass", min: 0, max: 100},
+                    {name: "middle", min: 0, max: 100},
+                    {name: "treble", min: 0, max: 100},
+                    {name: "presence", min: 0, max: 100}
+                ],
+                group: "effects"
+            },
+            eq: {
+                opcode: 0x07,
+                offset: 1,
+                parameters: [
+                    {name: "status", min: 0, max: 1},
+                    {name: "pregain", min: 0, max: 100},
+                    {name: "hz80", min: 0, max: 100},
+                    {name: "hz240", min: 0, max: 100},
+                    {name: "hz750", min: 0, max: 100},
+                    {name: "hz2200", min: 0, max: 100},
+                    {name: "hz6600", min: 0, max: 100}
+                ],
+                group: "effects"
+            },
+            mod: {
+                opcode: 0x08,
+                offset: 2,
+                parameters: [
+                    {name: "status", min: 0, max: 1},
+                    {name: "type", min: 0, max: 2},
+                    {name: "depth", min: 0, max: 100},
+                    {name: "rate", min: 0, max: 100}
+                ],
+                group: "effects"
+            },
+            noise: {
+                opcode: 0x09,
+                offset: 3,
+                parameters: [
+                    {name: "status", min: 0, max: 1},
+                    {name: "threshold", min: 0, max: 100},
+                    {name: "attack", min: 0, max: 100},
+                    {name: "release", min: 0, max: 100},
+                    {name: "hold", min: 0, max: 100}
+                ],
+                group: "effects"
+            },
+            delay: {
+                opcode: 0x0a,
+                offset: 4,
+                parameters: [
+                    {name: "status", min: 0, max: 1},
+                    {name: "time", min: 0, max: 600},
+                    {name: "level", min: 0, max: 100},
+                    {name: "feedback", min: 0, max: 100}
+                ],
+                group: "effects"
+            },
+            reverb: {
+                opcode: 0x0b,
+                offset: 5,
+                parameters: [
+                    {name: "status", min: 0, max: 1},
+                    {name: "level", min: 0, max: 100},
+                    {name: "decay", min: 0, max: 100}
+                ],
+                group: "effects"
+            },
+            battery: {opcode: 0x11, parameters: [{min: 0, max: 100}]},
+            autoshutdown: {opcode: 0x0e, parameters: [{min: 0, max: 100}]},
             preset: {opcode: 0x0c, parameters: [
                 {name: "switch", min: 0, max: 3},
                 {name: "offset-0", min: 0, max: 3},
@@ -46,36 +125,7 @@ function g(device) {
                 {name: "offset-2", min: 0, max: 3},
                 {name: "offset-3", min: 0, max: 3}
             ]},
-            effects: {
-                amp: 0x06,
-                eq: 0x07,
-                mod: 0x08,
-                noise: 0x09,
-                delay: 0x0a,
-                reverb: 0x0b
-            }
         },
-        preset: {
-            amp: {
-                type: {min: 0, max: 1},
-                status: {min: 0, max: 1},
-                preamp: {min: 0, max: 100},
-                master: {min: 0, max: 100},
-                bass: {min: 0, max: 100},
-                middle: {min: 0, max: 100},
-                treble: {min: 0, max: 100},
-                presence: {min: 0, max: 100}
-            },
-            eq: {
-                status: {min: 0, max: 1},
-                pregain: {min: -6, max: 6},
-                hz80: {min: -12, max: 12},
-                hz240: {min: -12, max: 12},
-                hz750: {min: -12, max: 12},
-                hz80: {min: -12, max: 12},
-
-            }
-        }
     };
 
 
@@ -98,31 +148,37 @@ function g(device) {
 
         console.log("Received: ", response);
 
-        if (response[4] === guitar.opcodes.battery) {
+        if (response[4] === guitar.commands.battery.opcode) {
             return drawer.update({battery: response[5]});
         }
-        if (response[4] === guitar.opcodes.autoshutdown) {
+        if (response[4] === guitar.commands.autoshutdown.opcode) {
             return drawer.update({autoshutdown: response[5]});
         }
-        if (response[4] === guitar.opcodes.preset) {
+        if (response[4] === guitar.commands.preset.opcode) {
             return drawer.update(
                 {preset: {switch: response[5], offsets: response.slice(6, 10)}}
             );
         }
-        if (Object.values(guitar.opcodes.effects).includes(response[4])) {
+        const effects_opcodes = Object.values(guitar.commands)
+            .filter((v) => v.group === "effects")
+            .map(({opcode}) => opcode);
+        if (effects_opcodes.includes(response[4])) {
             const effects = Object.assign({}, drawer.retrieve("effects"));
-            const effect = Object.entries(guitar.opcodes.effects).find(
-                ([ignore, v]) => v === response[4] //jslint-ignore-line
+            const effect = Object.entries(guitar.commands).find(
+                ([ignore, v]) => v.opcode === response[4] //jslint-ignore-line
             );
             effects[effect[0]] = response.slice(5, response.length - 3);
             return drawer.update({
                 effects
             });
         }
-        if (Object.values(guitar.opcodes.mixer).includes(response[4])) {
+        const mixer_opcodes = Object.values(guitar.commands)
+            .filter((v) => v.group === "mixer")
+            .map(({opcode}) => opcode);
+        if (mixer_opcodes.includes(response[4])) {
             const mixer = Object.assign({}, drawer.retrieve("mixer"));
-            const volume = Object.entries(guitar.opcodes.mixer).find(
-                ([ignore, v]) => v === response[4] //jslint-ignore-line
+            const volume = Object.entries(guitar.commands).find(
+                ([ignore, v]) => v.opcode === response[4] //jslint-ignore-line
             );
             mixer[volume[0]] = response.slice(5, response.length - 3);
             return drawer.update({
@@ -133,7 +189,7 @@ function g(device) {
 
     async function set_shutdown(event) {
         const selection = Number(event.currentTarget.getAttribute("data"));
-        await send([0x00, guitar.opcodes.autoshutdown, selection]);
+        await send([0x00, guitar.commands.autoshutdown.opcode, selection]);
     }
 
     async function set_preset({currentTarget}) {
@@ -143,7 +199,7 @@ function g(device) {
         const preset = drawer.retrieve("preset");
         await send([
             0x00,
-            guitar.opcodes.preset,
+            guitar.commands.preset.opcode,
             position,
             ...preset.offsets.with(position, offset)
         ]);
@@ -152,14 +208,14 @@ function g(device) {
     async function edit_preset() {
         await send([
             0x10,
-            guitar.opcodes.effects.amp
+            guitar.commands.amp.opcode
         ]);
     }
 
     async function mixer() {
         await send([
             0x10,
-            guitar.opcodes.mixer.guitar
+            guitar.commands.guitar.opcode
         ]);
     }
 
@@ -197,17 +253,32 @@ function g(device) {
         validate(preset, guitar);
     }
 
-    async function ask(prop, offset) {
-        if (!Object.keys(guitar.opcodes).includes(prop)) {
-            throw new Error(`Opcode not valid: ${prop}`);
+    async function ask(prop, par_offset) {
+        const groups = Object.values(guitar.commands).reduce(
+            (acc, {group}) => (
+                group && !acc.includes(group)
+                ? [...acc, group]
+                : acc
+            ),
+            []
+        );
+        if (
+            !Object.keys(guitar.commands).includes(prop)
+            && !groups.includes(prop)
+        ) {
+            throw new Error(`Prop name not valid: ${prop}`);
         }
 
         const m = [0x10];
 
-        if (typeof guitar.opcodes[prop] === "object") {
-            m.push(Object.entries(guitar.opcodes[prop])[offset][1]);
+        if (groups.includes(prop)) {
+            m.push(
+                Object.values(guitar.commands).find(
+                    ({group, offset}) => group === prop && offset === par_offset
+                ).opcode
+            );
         } else {
-            m.push(guitar.opcodes[prop]);
+            m.push(guitar.commands[prop].opcode);
         }
 
         await send(m);
@@ -215,6 +286,10 @@ function g(device) {
 
     function back() {
         drawer.update({effects: undefined, mixer: undefined});
+    }
+
+    function get_group_elements(group) {
+        return Object.values(guitar.commands).filter((v) => v.group === group).length;
     }
 
     return Object.freeze({
@@ -226,8 +301,8 @@ function g(device) {
         set_shutdown,
         set_preset,
         load_preset,
-        get_effects_length: () => guitar.effects_length,
-        get_mixer_length: () => guitar.mixer_length,
+        get_effects_length: () => get_group_elements("effects"),
+        get_mixer_length: () => get_group_elements("mixer"),
         edit_preset,
         mixer,
         back

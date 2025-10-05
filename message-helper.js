@@ -38,6 +38,14 @@ function validate(m) {
     if ((255 - parsSum) !== m[m.length - 3]) {
         throw new Error("checksum error", {cause: m});
     }
+
+    return true;
+}
+
+function validate_semantic(diff_state, commands) {
+    return Object.keys(commands).every(function ({parameters}) {
+        
+    });
 }
 
 export default Object.freeze({encode, decode, validate});

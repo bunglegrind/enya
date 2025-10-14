@@ -42,7 +42,7 @@ function validate(m) {
     return true;
 }
 
-function validate_semantic(diff_state, commands) {
+function is_correct(diff_state, commands) {
     return Object.keys(commands).every(function ({parameters}) {
         
     });

@@ -59,12 +59,12 @@ const guitar = {
             offset: 1,
             parameters: [
                 {name: "status", min: 0, max: 1},
-                {name: "pregain", min: 0, max: 100},
-                {name: "hz80", min: 0, max: 100},
-                {name: "hz240", min: 0, max: 100},
-                {name: "hz750", min: 0, max: 100},
-                {name: "hz2200", min: 0, max: 100},
-                {name: "hz6600", min: 0, max: 100}
+                {name: "pregain", min: 0, max: 12},
+                {name: "hz80", min: 0, max: 24},
+                {name: "hz240", min: 0, max: 24},
+                {name: "hz750", min: 0, max: 24},
+                {name: "hz2200", min: 0, max: 24},
+                {name: "hz6600", min: 0, max: 24}
             ],
             group: "effects"
         },

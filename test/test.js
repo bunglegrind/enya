@@ -19,11 +19,74 @@ jsc.claim("asking question", function (verdict, a) {
     );
 }, jsc.sequence(opcodes));
 
-jsc.claim("semantic validation", function (verdict, a) {
+jsc.claim("semantic opcode validation", function (verdict, a) {
     verdict(
-        message.is_correct(([a])) === true
+        message.is_correct([a], sonic.commands) === opcodes.includes(a)
     );
-}, jsc.sequence(opcodes));
+}, jsc.integer(0, 255));
+
+const commands = Object.entries(sonic.commands);
+
+commands.forEach(function ([command, p]) {
+    function classifier(is_permitted) {
+        return function (parameters) {
+            let i = 1;
+            return (
+                p.parameters.some(function ({max}) {
+                    i += 1;
+                    if (max < 256) {
+                        return false;
+                    }
+                    i += 1;
+                    return (
+                        is_permitted
+                        ? (parameters[i - 2] * 256 + parameters[i - 1]) > max
+                        : (parameters[i - 2] * 256 + parameters[i - 1]) <= max
+                    );
+                })
+                ? undefined
+                : ""
+            );
+        };
+    }
+
+    jsc.claim(
+        `semantic ${command} validation`,
+        function (verdict, ...parameters) {
+            verdict(message.is_correct(parameters, sonic.commands));
+        },
+        [
+            jsc.sequence([p.opcode]),
+            ...p.parameters.flatMap(function ({min, max}) {
+                return (
+                    max < 256
+                    ? jsc.integer(min, max)
+                    : [jsc.integer(0, 255), jsc.integer(0, 255)]
+                );
+            })
+        ],
+        classifier(true)
+    );
+
+    jsc.claim(
+        `semantic ${command} validation - bad parameters`,
+        function (verdict, ...parameters) {
+            verdict(!message.is_correct(parameters, sonic.commands));
+        },
+        [
+            jsc.sequence([p.opcode]),
+            ...p.parameters.flatMap(function ({max}) {
+                return (
+                    max < 256
+                    ? jsc.integer(max + 1, 255)
+                    : [jsc.integer(0, 255), jsc.integer(0, 255)]
+                );
+            })
+        ],
+        classifier(false)
+    );
+});
+
 
 
 jsc.check({

@@ -43,9 +43,9 @@ function validate(m) {
 }
 
 function is_correct(diff_state, commands) {
-    return Object.keys(commands).every(function ({parameters}) {
-        
-    });
+    const opcodes = Object.values(commands).map((x) => x.opcode);
+
+    return opcodes.includes(diff_state[0]);
 }
 
-export default Object.freeze({encode, decode, validate});
+export default Object.freeze({encode, decode, validate, is_correct});

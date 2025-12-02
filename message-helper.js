@@ -42,10 +42,34 @@ function validate(m) {
     return true;
 }
 
-function is_correct(diff_state, commands) {
-    const opcodes = Object.values(commands).map((x) => x.opcode);
+function is_correct(message, commands) {
+    const opcodes = Object.entries(commands).reduce(
+        function (acc, item) {
+            acc[item[1].opcode] = item[0];
+            return acc;
+        },
+        {}
+    );
 
-    return opcodes.includes(diff_state[0]);
+    let offset = 1;
+
+    return (
+        opcodes[message[0]]
+        && commands[opcodes[message[0]]].parameters.every(
+            (c, i) => (
+                c.max < 256
+                ? message[i + offset] >= c.min && message[i + offset] <= c.max
+                : (
+                    (
+                        message[i + offset] * 256 + message[i + offset + 1]
+                    ) >= c.min
+                    && (
+                        message[i + offset] * 256 + message[i + ++offset]
+                    ) <= c.max
+                )
+            )
+        )
+    );
 }
 
 export default Object.freeze({encode, decode, validate, is_correct});

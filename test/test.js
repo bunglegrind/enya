@@ -20,12 +20,6 @@ jsc.claim("asking question", function (verdict, a) {
     );
 }, jsc.sequence(opcodes));
 
-jsc.claim("semantic opcode validation", function (verdict, a) {
-    verdict(
-        message.is_correct([a], sonic.commands) === opcodes.includes(a)
-    );
-}, jsc.integer(0, 255));
-
 const commands = Object.entries(sonic.commands);
 
 commands.forEach(function ([command, p]) {

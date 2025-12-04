@@ -23,7 +23,7 @@ jsc.claim("asking question", function (verdict, a) {
 const commands = Object.entries(sonic.commands);
 
 commands.forEach(function ([command, p]) {
-    function classifier(parameters) {
+    function classifier(...parameters) {
         let i = 1;
         return (
             p.parameters.some(function ({max}) {
@@ -32,7 +32,7 @@ commands.forEach(function ([command, p]) {
                     return false;
                 }
                 i += 1;
-                return (parameters[i - 2] * 256 + parameters[i - 1]) > max;
+                return (parameters[i - 1] * 256 + parameters[i]) > max;
             })
             ? undefined
             : ""

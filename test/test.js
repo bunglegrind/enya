@@ -14,6 +14,19 @@ jsc1.claim("verify actual messages", function (verdict, a) {
 
 const opcodes = Object.values(sonic.commands).map((x) => x.opcode);
 
+const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
+
+jsc1("decode and encode actual messages", function (verdict, m) {
+    return verdict(
+        m === pipe(
+            message.extract,
+            message.decode,
+            message.encode,
+            message.packet
+        )(m)
+    );
+}, jsc1.sequence(actual_messages));
+
 jsc.claim("asking question", function (verdict, a) {
     verdict(
         message.validate(message.encode([a])) === true

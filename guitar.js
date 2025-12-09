@@ -19,7 +19,7 @@ function g(device) {
 
     function handleNotifications(event) {
         const value = event.target.value;
-        const response = message_helper.decode(value);
+        const response = message_helper.toArray(value);
 
         message_helper.validate(response);
 
@@ -119,7 +119,7 @@ function g(device) {
         message_helper.validate(full_message);
         console.log("sending ", full_message);
         await device.write(
-            Uint8Array.from(full_message)
+            message.toBuffer(full_message)
         );
     }
 

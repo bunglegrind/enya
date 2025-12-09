@@ -1,6 +1,6 @@
-/*jslint browser, devel, unordered*/
+/*jslint browser, devel, unordered, fart*/
 
-function decode(buffer) {
+function toArray(buffer) {
     let response = [];
     let i = 0;
     while (i < buffer.byteLength) {
@@ -9,6 +9,45 @@ function decode(buffer) {
     }
     return response;
 }
+
+function toBuffer(array) {
+    return Uint8Array.from(array);
+}
+
+function extract(message) {
+    return message.slice(4, message[2]);
+}
+
+function toMessage(serial, commands) {
+    const c = Object.values(commands).find(({opcode}) => serial[0] === opcode);
+
+    const message = [serial[0]];
+
+    let i = 1;
+    c.parameters.forEach(function ({max}) {
+        if (max < 256) {
+            message.push(serial[i]);
+            i += 1;
+            return;
+        }
+        message.push(serial[i] * 256 + serial[i + 1]);
+        i += 2;
+    });
+
+    return message;
+}
+
+function serialize(message) {
+    return message.reduce(
+        (acc, item) => (
+            item < 256
+            ? [...acc, item]
+            : [...acc, Math.floor(item / 256), item % 256]
+        ),
+        []
+    );
+}
+
 
 function encode(m) {
     const mess = [m.length + 3, ...m];
@@ -72,4 +111,11 @@ function is_correct(message, commands) {
     );
 }
 
-export default Object.freeze({encode, decode, validate, is_correct});
+export default Object.freeze({
+    toBuffer,
+    toArray,
+    encode,
+    decode,
+    validate,
+    is_correct
+});

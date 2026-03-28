@@ -2,41 +2,41 @@
 const guitar = {
     name: "NOVA Go Sonic System",
     service: 0xab11,
-    commands: {
+    messages: {
         guitar: {//guitar input volume
             opcode: 0x00,
             offset: 0,
-            parameters: [{min: 0, max: 100}],
+            parameters: [{name: "value", min: 0, max: 100}],
             group: "mixer"
         },
         otg: {//usb output volume
             opcode: 0x01,
             offset: 1,
-            parameters: [{min: 0, max: 100}],
+            parameters: [{name: "value", min: 0, max: 100}],
             group: "mixer"
         },
         bluetooth: {//bluetooth input volume
             opcode: 0x02,
             offset: 2,
-            parameters: [{min: 0, max: 100}],
+            parameters: [{name: "value", min: 0, max: 100}],
             group: "mixer"
         },
         box: {//speaker output volume
             opcode: 0x03,
             offset: 3,
-            parameters: [{min: 0, max: 100}],
+            parameters: [{name: "value", min: 0, max: 100}],
             group: "mixer"
         },
         ear: {//3.5mm jack output volume
             opcode: 0x04,
             offset: 4,
-            parameters: [{min: 0, max: 100}],
+            parameters: [{name: "value", min: 0, max: 100}],
             group: "mixer"
         },
         line: {//6.35mm jack output volume
             opcode: 0x05,
             offset: 5,
-            parameters: [{min: 0, max: 100}],
+            parameters: [{name: "value", min: 0, max: 100}],
             group: "mixer"
         },
         //status is on/off
@@ -114,8 +114,12 @@ const guitar = {
             ],
             group: "effects"
         },
-        battery: {opcode: 0x11, parameters: [{min: 0, max: 100}]},
-        autoshutdown: {opcode: 0x0e, parameters: [{min: 0, max: 100}]},
+        battery: {opcode: 0x11, parameters: [
+            {name: "value", min: 0, max: 100}
+        ]},
+        autoshutdown: {opcode: 0x0e, parameters: [
+            {name: "value", min: 0, max: 100}
+        ]},
         preset: {opcode: 0x0c, parameters: [
             {name: "switch", min: 0, max: 3},
             {name: "offset-0", min: 0, max: 3},
@@ -124,8 +128,28 @@ const guitar = {
             {name: "offset-3", min: 0, max: 3}
         ]},
         unknown: {opcode: 0xff, parameters: [
-            {min: 0, max: 0}
-        ]}//from app to guitar. At connection startup. Seems useless
+            {name: "value", min: 0, max: 0}
+        ]},//from app to guitar. At connection startup. Seems useless
+        firmware: {opcode: 0x10, parameters: [
+            {name: "firmware-0", min: 0, max: 255},
+            {name: "firmware-1", min: 0, max: 255},
+            {name: "firmware-2", min: 0, max: 255},
+            {name: "firmware-3", min: 0, max: 255},
+            {name: "firmware-4", min: 0, max: 255},
+            {name: "firmware-5", min: 0, max: 255},
+            {name: "firmware-6", min: 0, max: 255}
+        ]},
+        id: {opcode: 0x0f, parameters: [
+            {name: "id-0", min: 0, max: 255},
+            {name: "id-1", min: 0, max: 255},
+            {name: "id-2", min: 0, max: 255},
+            {name: "id-3", min: 0, max: 255},
+            {name: "id-4", min: 0, max: 255},
+            {name: "id-5", min: 0, max: 255},
+            {name: "id-6", min: 0, max: 255},
+            {name: "id-7", min: 0, max: 255},
+            {name: "id-8", min: 0, max: 255}
+        ]}
         //TODO: factory reset
     }
 };

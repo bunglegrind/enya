@@ -1,108 +1,119 @@
-/*jslint browser, unordered*/
+/*jslint browser, unordered, fart*/
 
-import message from "../message-helper.js";
+import message_factory from "../message.js";
 import actual_messages from "./messages.js";
 import sonic from "../sonic-settings.js";
 import jSCheck from "./jscheck.js";
 const jsc = jSCheck();
 const jsc1 = jSCheck();
 
+const msg_builder = message_factory(sonic.messages);
 
-jsc1.claim("verify actual messages", function (verdict, a) {
-    return verdict(message.validate(a) === true);
-}, jsc1.sequence(actual_messages));
-
-const opcodes = Object.values(sonic.commands).map((x) => x.opcode);
-
-const pipe = (...fns) => (x) => fns.reduce((v, f) => f(v), x);
-
-jsc1("decode and encode actual messages", function (verdict, m) {
-    return verdict(
-        m === pipe(
-            message.extract,
-            message.decode,
-            message.encode,
-            message.packet
-        )(m)
-    );
-}, jsc1.sequence(actual_messages));
-
-jsc.claim("asking question", function (verdict, a) {
-    verdict(
-        message.validate(message.encode([a])) === true
-    );
-}, jsc.sequence(opcodes));
-
-const commands = Object.entries(sonic.commands);
-
-commands.forEach(function ([command, p]) {
-    function classifier(...parameters) {
-        let i = 1;
-        return (
-            p.parameters.some(function ({max}) {
-                i += 1;
-                if (max < 256) {
-                    return false;
-                }
-                i += 1;
-                return (parameters[i - 1] * 256 + parameters[i]) > max;
-            })
-            ? undefined
-            : ""
-        );
+jsc1.claim("verify actual packets", function (verdict, array) {
+    try {
+        msg_builder.from(array);
+    } catch (ignore) {
+        return verdict(false);
     }
 
+    return verdict(true);
+}, jsc1.sequence(actual_messages));
+
+jsc1.claim("decode and encode actual messages", function (verdict, m) {
+    const transformed = msg_builder.from(m).toArray();
+    return verdict(m.join() === transformed.join());
+}, jsc1.sequence(actual_messages));
+
+const messages = Object.keys(sonic.messages);
+
+jsc.claim("query", function (verdict, msg) {
+    verdict(
+        msg_builder.from(msg_builder.query(msg).toBuffer()).get_msg() === msg
+    );
+}, jsc.one_of(messages));
+
+jsc.claim(
+    "query invalid messages",
+    function (verdict, msg) {
+        try {
+            msg_builder.query(msg);
+        } catch (e) {
+            return verdict(e.message === "Unknown message");
+        }
+
+        verdict(false);
+
+    },
+    jsc.string(),
+    function classifier(str) {
+        if (messages.includes(str)) {
+            return;
+        }
+        return "";
+    }
+);
+
+Object.entries(sonic.messages).forEach(function ([message_name, p]) {
     jsc.claim(
-        `semantic ${command} validation`,
-        function (verdict, ...parameters) {
-            verdict(message.is_correct(parameters, sonic.commands));
+        "put",
+        function (verdict, msg, parameters) {
+            verdict(
+                msg_builder.from(
+                    msg_builder.put(msg, parameters).toBuffer()
+                ).get_msg() === msg
+            );
         },
         [
-            jsc.sequence([p.opcode]),
-            ...p.parameters.flatMap(function ({min, max}) {
-                return (
-                    max < 256
-                    ? jsc.integer(min, max)
-                    : [jsc.integer(0, 2), jsc.integer(0, 255)]
-                );
-            })
-        ],
-        classifier
+            message_name,
+            jsc.object(
+                jsc.array(p.parameters.map(({name}) => name)),
+                p.parameters.map(({min, max}) => jsc.integer(min, max))
+            )
+        ]
     );
 
     function my_specifier(params) {
         return function generator() {
+            const g = params.map(
+                ({min, max}) => jsc.integer(min, max)
+            );
             const forged = Math.floor(Math.random() * params.length);
-            return params.flatMap(function ({min, max}, i) {
-                if (i !== forged) {
-                    if (max < 256) {
-                        return jsc.integer(min, max)();
-                    }
-                    let extracted = jsc.integer(min, max)();
-                    return [Math.floor(extracted / 256), extracted % 256];
-                }
-                if (max < 256) {
-                    return jsc.integer(max + 1, 255)();
-                }
-                let bad_extracted = jsc.integer(max + 1, 65535)();
-                return [Math.floor(bad_extracted / 256), bad_extracted % 256];
-            });
+            const max = params[forged].max;
+            if (max < 256) {
+                g[forged] = jsc.integer(max + 1, 255);
+            } else {
+                g[forged] = jsc.integer(max + 1, 65535);
+            }
+
+            return jsc.object(
+                jsc.array(p.parameters.map(({name}) => name)),
+                g
+            )();
         };
     }
 
-    jsc.claim(
-        `semantic ${command} validation - bad parameters`,
-        function (verdict, ...parameters) {
-            verdict(!message.is_correct(parameters.flat(), sonic.commands));
-        },
-        [
-            jsc.sequence([p.opcode]),
-            my_specifier(p.parameters)
-        ]
-    );
+    const only_queries = ["firmware", "id"];
+
+    if (!only_queries.includes(message_name)) {
+        jsc.claim(
+            "invalid put parameters",
+            function (verdict, msg, parameters) {
+                try {
+                    msg_builder.put(msg, parameters);
+                } catch (e) {
+                    return verdict(e.message === "Parameter out of range");
+                }
+
+                verdict(false);
+
+            },
+            [
+                message_name,
+                my_specifier(p.parameters)
+            ]
+        );
+    }
 });
-
-
 
 jsc.check({
     detail: 3,

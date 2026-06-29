@@ -1,6 +1,8 @@
 /*jslint browser, devel, unordered*/
+import message_factory from "../message.js";
+import sonic from "../sonic-settings.js";
 
-import message_helper from "../message-helper.js";
+const msg_builder = message_factory(sonic.messages);
 
 let handle_notifications;
 let clean;
@@ -45,17 +47,16 @@ function disconnect() {
 }
 
 function write(buffer) {
-    const command = Array.from(buffer);
+    const command = msg_builder.from(buffer).toArray();
     let encoded_message;
 
     if (command[3] === 0x00) {
-        encoded_message = message_helper.encode(
-            [0x20, ...command.slice(4, command.length - 3)]
-        );
+        const response = ...command;
+        command
     }
 
     if (command[3] === 0x10) {
-        encoded_message = message_helper.encode(
+        encoded_message = msg_builder.from(
             [0x20, command[4], ...guitar_mock.defaults[command[4]]]
         );
     }

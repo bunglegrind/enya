@@ -33,18 +33,18 @@ function factory(root, doc, guitar) {
             return root.replaceChildren(connect(dom, guitar));
         }
         if (state.battery === undefined) {
-            return guitar.ask("battery");
+            return guitar.query("battery");
         }
         if (state.autoshutdown === undefined) {
-            return guitar.ask("autoshutdown");
+            return guitar.query("autoshutdown");
         }
         if (state.preset === undefined) {
-            return guitar.ask("preset");
+            return guitar.query("preset");
         }
 
         if (state.mixer !== undefined) {
             if (Object.keys(state.mixer).length !== guitar.get_mixer_length()) {
-                return guitar.ask("mixer", Object.keys(state.mixer).length);
+                return guitar.query("mixer", Object.keys(state.mixer).length);
             }
 
             return root.replaceChildren(...mixer(state, dom, guitar));
@@ -55,7 +55,10 @@ function factory(root, doc, guitar) {
                 Object.keys(state.effects).length
                 !== guitar.get_effects_length()
             ) {
-                return guitar.ask("effects", Object.keys(state.effects).length);
+                return guitar.query(
+                    "effects",
+                    Object.keys(state.effects).length
+                );
             }
 
             return root.replaceChildren(...effects(state, dom, guitar));
@@ -70,6 +73,5 @@ function factory(root, doc, guitar) {
 
     return drawer;
 }
-
 
 export default Object.freeze(factory);

@@ -145,7 +145,11 @@ function message_factory(messages) {
             return message;
         }
 
-        return Object.freeze({get_msg, toArray, toBuffer});
+        function get_parameters() {
+            return parameters;
+        }
+
+        return Object.freeze({get_msg, toArray, toBuffer, get_parameters});
 
     }
 

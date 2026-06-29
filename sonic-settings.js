@@ -118,14 +118,14 @@ const guitar = {
             {name: "value", min: 0, max: 100}
         ]},
         autoshutdown: {opcode: 0x0e, parameters: [
-            {name: "value", min: 0, max: 100}
+            {name: "value", min: 0, max: 3, labels: ["0", "15m", "30m", "45m"]}
         ]},
         preset: {opcode: 0x0c, parameters: [
-            {name: "switch", min: 0, max: 3},
-            {name: "offset-0", min: 0, max: 3},
-            {name: "offset-1", min: 0, max: 3},
-            {name: "offset-2", min: 0, max: 3},
-            {name: "offset-3", min: 0, max: 3}
+            {name: "switch", min: 0, max: 3, labels: ["0", "1", "2", "3"]},
+            {name: "offset-0", min: 0, max: 3, labels: ["0", "1", "2", "3"]},
+            {name: "offset-1", min: 0, max: 3, labels: ["0", "1", "2", "3"]},
+            {name: "offset-2", min: 0, max: 3, labels: ["0", "1", "2", "3"]},
+            {name: "offset-3", min: 0, max: 3, labels: ["0", "1", "2", "3"]}
         ]},
         unknown: {opcode: 0xff, parameters: [
             {name: "value", min: 0, max: 0}
@@ -151,6 +151,7 @@ const guitar = {
             {name: "id-8", min: 0, max: 255}
         ]}
         //TODO: factory reset
+        //TODO: firmware update
     }
 };
 

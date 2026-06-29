@@ -27,7 +27,8 @@ export default Object.freeze(function (state, dom, guitar) {
                 change: async function ({target}) {
                     const confirm = await utils.proceed_popup(
                         dom,
-                        "The current preset confwill be deleted. Proceed?"
+                        "The current effects configuration will be deleted. "
+                        + "Proceed?"
                     );
                     if (confirm) {
                         const return_message = await guitar.load_preset(

@@ -1,6 +1,8 @@
-/*jslint browser, unordered*/
+/*jslint browser, unordered, fart*/
 
 export default Object.freeze(function (state, dom, guitar) {
+
+    const messages = guitar.messages;
 
     function highlight_active(props) {
         if (props.data !== state.autoshutdown) {
@@ -47,110 +49,34 @@ export default Object.freeze(function (state, dom, guitar) {
             })("⚙")
         ),
         dom.main("main")(
-            dom.button(highlight_element({
-                "data-row": 0,
-                "data-element": 0,
-                click: guitar.set_preset
-            }))("0"),
-            dom.button(highlight_element({
-                "data-row": 0,
-                "data-element": 1,
-                click: guitar.set_preset
-            }))("1"),
-            dom.button(highlight_element({
-                "data-row": 0,
-                "data-element": 2,
-                click: guitar.set_preset
-            }))("2"),
-            dom.button(highlight_element({
-                "data-row": 0,
-                "data-element": 3,
-                click: guitar.set_preset
-            }))("3"),
-            dom.button(highlight_element({
-                "data-row": 1,
-                "data-element": 0,
-                click: guitar.set_preset
-            }))("0"),
-            dom.button(highlight_element({
-                "data-row": 1,
-                "data-element": 1,
-                click: guitar.set_preset
-            }))("1"),
-            dom.button(highlight_element({
-                "data-row": 1,
-                "data-element": 2,
-                click: guitar.set_preset
-            }))("2"),
-            dom.button(highlight_element({
-                "data-row": 1,
-                "data-element": 3,
-                click: guitar.set_preset
-            }))("3"),
-            dom.button(highlight_element({
-                "data-row": 2,
-                "data-element": 0,
-                click: guitar.set_preset
-            }))("0"),
-            dom.button(highlight_element({
-                "data-row": 2,
-                "data-element": 1,
-                click: guitar.set_preset
-            }))("1"),
-            dom.button(highlight_element({
-                "data-row": 2,
-                "data-element": 2,
-                click: guitar.set_preset
-            }))("2"),
-            dom.button(highlight_element({
-                "data-row": 2,
-                "data-element": 3,
-                click: guitar.set_preset
-            }))("3"),
-            dom.button(highlight_element({
-                "data-row": 3,
-                "data-element": 0,
-                click: guitar.set_preset
-            }))("0"),
-            dom.button(highlight_element({
-                "data-row": 3,
-                "data-element": 1,
-                click: guitar.set_preset
-            }))("1"),
-            dom.button(highlight_element({
-                "data-row": 3,
-                "data-element": 2,
-                click: guitar.set_preset
-            }))("2"),
-            dom.button(highlight_element({
-                "data-row": 3,
-                "data-element": 3,
-                click: guitar.set_preset
-            }))("3")
+            ...messages.preset.parameters.find(
+                ({name}) => name === "swich"
+            ).labels.map(
+                function ({labels}) {
+                    return labels.flatMap(function (switch_label) {
+                        messages.preset.parameters.find(
+                            ({name}) => name === `offset-${switch_label}`
+                        ).labels.flatMap(function (offset_label) {
+                            return dom.button(highlight_element({
+                                "data-row": switch_label,
+                                "data-element": offset_label,
+                                click: guitar.set_preset
+                            }))(offset_label);
+                        });
+                    });
+                }
+            )
         ),
         dom.footer("footer")(
             dom.div("battery")(state.battery + "% 🔋"),
             dom.div("autoshutdown")(
-                dom.button(
-                    highlight_active(
-                        {id: "0", data: 0, click: guitar.set_shutdown}
-                    )
-                )("0"),
-                dom.button(
-                    highlight_active(
-                        {id: "15", data: 1, click: guitar.set_shutdown}
-                    )
-                )("15m"),
-                dom.button(
-                    highlight_active(
-                        {id: "30", data: 2, click: guitar.set_shutdown}
-                    )
-                )("30m"),
-                dom.button(
-                    highlight_active(
-                        {id: "45", data: 3, click: guitar.set_shutdown}
-                    )
-                )("45m")
+                ...messages.autoshutdown.labels.map(function (label, i) {
+                    dom.button(
+                        highlight_active(
+                            {id: label, data: i, click: guitar.set_shutdown}
+                        )
+                    )(label);
+                })
             )
         )
     ];

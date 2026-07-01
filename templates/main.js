@@ -13,7 +13,7 @@ export default Object.freeze(function (state, dom, guitar) {
     }
 
     function highlight_element(props) {
-        const offset = state.preset.offsets[props["data-row"]];
+        const offset = state.preset[`offset-${props["data-row"]}`];
         if (props["data-element"] !== offset) {
             return props;
         }
@@ -24,6 +24,14 @@ export default Object.freeze(function (state, dom, guitar) {
 
         return Object.assign({}, props, {class: "highlight"});
     }
+
+    const preset_offsets = messages.preset.parameters.filter(
+        ({name}) => name.startsWith("offset")
+    );
+    const switch_offsets = messages.preset.parameters.find(
+        ({name}) => name === "switch"
+    );
+
 
     return [
         dom.header("header")(
@@ -49,34 +57,32 @@ export default Object.freeze(function (state, dom, guitar) {
             })("⚙")
         ),
         dom.main("main")(
-            ...messages.preset.parameters.find(
-                ({name}) => name === "swich"
-            ).labels.map(
-                function ({labels}) {
-                    return labels.flatMap(function (switch_label) {
-                        messages.preset.parameters.find(
-                            ({name}) => name === `offset-${switch_label}`
-                        ).labels.flatMap(function (offset_label) {
+            ...switch_offsets.labels.flatMap(
+                function (ignore, i) {
+                    return preset_offsets[i].labels.map(
+                        function (offset_label, j) {
                             return dom.button(highlight_element({
-                                "data-row": switch_label,
-                                "data-element": offset_label,
+                                "data-row": i,
+                                "data-element": j,
                                 click: guitar.set_preset
                             }))(offset_label);
-                        });
-                    });
+                        }
+                    );
                 }
             )
         ),
         dom.footer("footer")(
             dom.div("battery")(state.battery + "% 🔋"),
             dom.div("autoshutdown")(
-                ...messages.autoshutdown.labels.map(function (label, i) {
-                    dom.button(
-                        highlight_active(
-                            {id: label, data: i, click: guitar.set_shutdown}
-                        )
-                    )(label);
-                })
+                ...messages.autoshutdown.parameters[0].labels.map(
+                    function (label, i) {
+                        return dom.button(
+                            highlight_active(
+                                {id: label, data: i, click: guitar.set_shutdown}
+                            )
+                        )(label);
+                    }
+                )
             )
         )
     ];

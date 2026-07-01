@@ -78,26 +78,24 @@ function g(device) {
     async function set_shutdown(event) {
         const selection = Number(event.currentTarget.getAttribute("data"));
         await send(
-            message_builder.set("autoshutdown", {value: selection})
+            message_builder.put("autoshutdown", {value: selection})
         );
     }
 
     async function set_preset({currentTarget}) {
         const position = Number(currentTarget.getAttribute("data-row"));
         const offset = Number(currentTarget.getAttribute("data-element"));
+        console.log(position, offset);
 
         const preset = drawer.retrieve("preset");
-        const new_offsets = preset.offsets.with(position, offset);
+
+        const new_offsets = {...preset};
+        new_offsets[`offset-${position}`] = offset;
+        new_offsets.switch = position;
         await send(
-            message_builder.set(
+            message_builder.put(
                 "preset",
-                {
-                    "switch": position,
-                    "offset-0": new_offsets[0],
-                    "offset-1": new_offsets[1],
-                    "offset-2": new_offsets[2],
-                    "offset-3": new_offsets[3]
-                }
+                new_offsets
             )
         );
     }

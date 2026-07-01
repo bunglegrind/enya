@@ -149,7 +149,17 @@ function message_factory(messages) {
             return parameters;
         }
 
-        return Object.freeze({get_msg, toArray, toBuffer, get_parameters});
+        function get_type() {
+            return type;
+        }
+
+        return Object.freeze({
+            get_msg,
+            toArray,
+            toBuffer,
+            get_parameters,
+            get_type
+        });
 
     }
 
@@ -240,7 +250,17 @@ function message_factory(messages) {
             parameters
         });
     }
-    return Object.freeze({from, query, put});
+
+    function response(message, parameters) {
+        validate_parameters(parameters, message);
+
+        return build_msg({
+            message,
+            type: "response",
+            parameters
+        });
+    }
+    return Object.freeze({from, query, put, response});
 }
 
 export default Object.freeze(message_factory);

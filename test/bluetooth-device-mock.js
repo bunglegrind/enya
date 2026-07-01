@@ -8,26 +8,15 @@ let handle_notifications;
 let clean;
 
 const guitar_mock = {
-    defaults: [
-        [40], //0x00
-        [41], //0x01
-        [42], //0x02
-        [45], //0x03
-        [45], //0x04
-        [45], //0x05
-        [1, 1, 10, 65, 23, 10, 30, 40], //0x06
-        [1, 3, 18, 3, 5, 9, 22], //0x07
-        [1, 2, 23, 82], //0x08
-        [1, 12, 56, 89, 11], //0x09
-        [1, 0x01, 0x2c, 23, 14], //0x0a
-        [0, 45, 78], //0x0b
-        [0, 0, 0, 0, 0], //0x0c
-        [], //0x0d
-        [1], //0x0e
-        [], //0x0f
-        [], //0x10
-        [50] //0x11
-    ]
+    battery: {value: 50},
+    autoshutdown: {value: 0},
+    preset: {
+        switch: 2,
+        "offset-0": 0,
+        "offset-1": 0,
+        "offset-2": 1,
+        "offset-3": 0
+    }
 };
 
 function connect({cleanUp}) {
@@ -47,18 +36,28 @@ function disconnect() {
 }
 
 function write(buffer) {
-    const command = msg_builder.from(buffer).toArray();
+    const msg = msg_builder.from(buffer);
     let encoded_message;
 
-    if (command[3] === 0x00) {
-        const response = ...command;
-        command
+    const type = msg.get_type();
+
+    const element = msg.get_msg();
+    console.log(element);
+
+    if (type === "put") {
+        guitar_mock[element] = msg.get_parameters();
+        console.log(guitar_mock[element]);
+        encoded_message = msg_builder.response(
+            element,
+            guitar_mock[element]
+        ).toArray();
     }
 
-    if (command[3] === 0x10) {
-        encoded_message = msg_builder.from(
-            [0x20, command[4], ...guitar_mock.defaults[command[4]]]
-        );
+    if (type === "query") {
+        encoded_message = msg_builder.response(
+            element,
+            guitar_mock[element]
+        ).toArray();
     }
 
     const event = Object.create(null);

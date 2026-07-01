@@ -72,6 +72,24 @@ Object.entries(sonic.messages).forEach(function ([message_name, p]) {
         ]
     );
 
+    jsc.claim(
+        "response",
+        function (verdict, msg, parameters) {
+            verdict(
+                msg_builder.from(
+                    msg_builder.response(msg, parameters).toBuffer()
+                ).get_msg() === msg
+            );
+        },
+        [
+            message_name,
+            jsc.object(
+                jsc.array(p.parameters.map(({name}) => name)),
+                p.parameters.map(({min, max}) => jsc.integer(min, max))
+            )
+        ]
+    );
+
     function my_specifier(params) {
         return function generator() {
             const g = params.map(

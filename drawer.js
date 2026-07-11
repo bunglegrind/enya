@@ -16,11 +16,28 @@ function factory(root, doc, guitar) {
         draw();
     }
 
-    function update(updated_state) { //jslint-ignore-line
-/*jslint-disable*/
-        state = {...state, ...updated_state};
-/*jslint-enable*/
-        draw();
+    function update(updated_state) {
+        if (
+            state.effects
+            && (
+                Object.keys(state.effects).length
+                !== guitar.get_effects_length()
+            )
+        ) {
+            state = {...state, effects: {...state.effects, ...updated_state}};
+        } else if (
+            state.mixer
+            && (
+                Object.keys(state.mixer).length
+                !== guitar.get_mixer_length()
+            )
+        ) {
+            state = {...state, mixer: {...state.mixer, ...updated_state}};
+
+        } else {
+            state = {...state, ...updated_state};
+        }
+        return draw();
     }
 
     function retrieve(prop) {
@@ -44,18 +61,36 @@ function factory(root, doc, guitar) {
 
         if (state.mixer !== undefined) {
             if (Object.keys(state.mixer).length !== guitar.get_mixer_length()) {
-                return guitar.query("mixer", Object.keys(state.mixer).length);
+                return guitar.group_query(
+                    "mixer",
+                    Object.keys(state.mixer).length
+                );
             }
 
             return root.replaceChildren(...mixer(state, dom, guitar));
         }
 
-        if (state.effects !== undefined) {
+        if (state.mixer) {
+            if (
+                Object.keys(state.mixer).length
+                !== guitar.get_mixer_length()
+            ) {
+                return guitar.group_query(
+                    "mixer",
+                    Object.keys(state.mixer).length
+                );
+            }
+
+            return root.replaceChildren(...mixer(state, dom, guitar));
+        }
+
+
+        if (state.effects) {
             if (
                 Object.keys(state.effects).length
                 !== guitar.get_effects_length()
             ) {
-                return guitar.query(
+                return guitar.group_query(
                     "effects",
                     Object.keys(state.effects).length
                 );

@@ -43,36 +43,6 @@ function g(device) {
         );
 
         return drawer.update(state);
-        //mixer: [13, 134, 144...]
-        //effects: [{}, ]
-
-        const effects_opcodes = Object.values(guitar.messages).filter(
-            (v) => v.group === "effects"
-        ).map((a) => a.opcode);
-        if (effects_opcodes.includes(response[4])) {
-            const effects = Object.assign({}, drawer.retrieve("effects"));
-            const effect = Object.entries(guitar.messages).find(
-                ([ignore, v]) => v.opcode === response[4] //jslint-ignore-line
-            );
-            effects[effect[0]] = response.slice(5, response.length - 3);
-            return drawer.update({
-                effects
-            });
-        }
-        const mixer_opcodes = Object.values(guitar.messages).filter(
-            (v) => v.group === "mixer"
-        );
-
-        if (mixer_opcodes.includes(response[4])) {
-            const mixer = Object.assign({}, drawer.retrieve("mixer"));
-            const volume = Object.entries(guitar.messages).find(
-                ([ignore, v]) => v.opcode === response[4] //jslint-ignore-line
-            );
-            mixer[volume[0]] = response.slice(5, response.length - 3);
-            return drawer.update({
-                mixer
-            });
-        }
     }
 
     async function set_shutdown(event) {
@@ -101,11 +71,11 @@ function g(device) {
     }
 
     async function edit_preset() {
-        await send(message_builder.query("amp"));
+        return await drawer.update({effects: {}});
     }
 
     async function mixer() {
-        await send(message_builder.query("guitar"));
+        return await drawer.update({mixer: {}});
     }
 
     async function connect() {
@@ -130,43 +100,31 @@ function g(device) {
         await device.write(m.toBuffer());
     }
 
-    async function load_preset(preset) {
-        const effects = Object.values(guitar.messages).filter(
-            (a) => a.group === "effects"
-        );
-        if (
-            !validate(
-                preset,
-                effects
-            )
-        ) {
-            return "File not compatible";
-        }
-
-        Object.keys(effects);
+    async function load_preset(ignore) {
 
         return await "File loaded";
     }
 
-    async function query(prop, par_offset) {
-        if (
-            !Object.keys(guitar.messages).includes(prop)
-            && !groups.includes(prop)
-        ) {
+    async function query(prop) {
+        if (!Object.keys(guitar.messages).includes(prop)) {
             throw new Error(`Prop name not valid: ${prop}`);
         }
 
-        if (!groups.includes(prop)) {
-            return await send(message_builder.query(prop));
+        return await send(message_builder.query(prop));
+    }
+
+    async function group_query(group, par_offset) {
+        if (!groups.includes(group)) {
+            throw new Error(`Group name not valid: ${group}`);
         }
 
-        await send(
-            message_builder.query(
-                Object.values(guitar.messages).find(
-                    (a) => a.group === prop && a.offset === par_offset
-                )
-            )
+        console.log(guitar.messages);
+        return await query(
+            Object.entries(guitar.messages).find(
+                (a) => a[1].group === group && a[1].offset === par_offset
+            )[0]
         );
+
     }
 
     function back() {
@@ -181,6 +139,7 @@ function g(device) {
 
     return Object.freeze({
         connect,
+        group_query,
         query,
         set_drawer,
         disconnect: device.disconnect,

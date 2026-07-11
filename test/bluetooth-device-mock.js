@@ -16,6 +16,67 @@ const guitar_mock = {
         "offset-1": 0,
         "offset-2": 1,
         "offset-3": 0
+    },
+    amp: {
+        status: 0,
+        type: 0,
+        "volume/preamp": 0,
+        master: 0,
+        bass: 0,
+        middle: 0,
+        treble: 0,
+        presence: 0
+    },
+    eq: {
+        status: 0,
+        pregain: 0,
+        hz80: 0,
+        hz240: 0,
+        hz750: 0,
+        hz2200: 0,
+        hz6600: 0
+    },
+    mod: {
+        status: 0,
+        type: 0,
+        depth: 0,
+        rate: 0
+    },
+    noise: {
+        status: 0,
+        threshold: 0,
+        attack: 0,
+        release: 0,
+        hold: 0
+    },
+    delay: {
+        status: 0,
+        time: 0,
+        level: 0,
+        feedback: 0
+    },
+    reverb: {
+        status: 0,
+        level: 0,
+        decay: 0
+    },
+    guitar: {
+        value: 0
+    },
+    otg: {
+        value: 0
+    },
+    bluetooth: {
+        value: 0
+    },
+    box: {
+        value: 0
+    },
+    ear: {
+        value: 0
+    },
+    line: {
+        value: 0
     }
 };
 

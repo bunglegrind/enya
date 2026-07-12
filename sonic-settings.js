@@ -45,7 +45,7 @@ const guitar = {
             offset: 0,
             parameters: [
                 {name: "status", min: 0, max: 1},
-                {name: "type", min: 0, max: 1},//0 - clean, 1 - distorted
+                {name: "type", min: 0, max: 1, labels: ["clean", "distorted"]},
                 {name: "volume/preamp", min: 0, max: 100},
                 {name: "master", min: 0, max: 100},
                 {name: "bass", min: 0, max: 100},
@@ -74,8 +74,9 @@ const guitar = {
             offset: 2,
             parameters: [
                 {name: "status", min: 0, max: 1},
-                //0 - chorus, 1 - tremolo, 2 - vibrato
-                {name: "type", min: 0, max: 2},
+                {name: "type", min: 0, max: 2, labels: [
+                    "chorus", "tremolo", "vibrato"
+                ]},
                 {name: "depth", min: 0, max: 100},
                 {name: "rate", min: 0, max: 100}
             ],

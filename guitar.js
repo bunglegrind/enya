@@ -13,7 +13,7 @@ const groups = Object.values(guitar.messages).reduce(
 );
 
 
-function g(device) {
+function guitar_factory(device) {
 
     const message_builder = message_factory(guitar.messages);
 
@@ -156,4 +156,4 @@ function g(device) {
     });
 }
 
-export default Object.freeze(g);
+export default Object.freeze(guitar_factory);

@@ -86,7 +86,7 @@ function g(device) {
                 cleanUp
             });
 
-            device.start_notifications(handleNotifications);
+            await device.start_notifications(handleNotifications);
 
             drawer.update({connected: true});
 

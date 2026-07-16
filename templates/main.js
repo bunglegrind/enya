@@ -1,8 +1,8 @@
 /*jslint browser, unordered, fart*/
 
-export default Object.freeze(function (state, dom, guitar) {
+export default Object.freeze(function (state, dom, handles) {
 
-    const messages = guitar.messages;
+    const messages = state.messages;
 
     function highlight_active(props) {
         if (props.data !== state.autoshutdown) {
@@ -37,23 +37,23 @@ export default Object.freeze(function (state, dom, guitar) {
         dom.header("header")(
             dom.button({
                 id: "disconnect",
-                click: guitar.disconnect
+                click: handles.disconnect
             })("Disconnect"),
             dom.button({
                 id: "edit",
-                click: guitar.edit_preset
+                click: handles.edit_preset
             })("Edit"),
             dom.button({
                 id: "backup",
-                click: guitar.disconnect
+                click: handles.disconnect
             })("Backup"),
             dom.button({
                 id: "restore",
-                click: guitar.disconnect
+                click: handles.disconnect
             })("Restore"),
             dom.button({
                 id: "mixer",
-                click: guitar.mixer
+                click: handles.mixer
             })("⚙")
         ),
         dom.main("main")(
@@ -64,7 +64,7 @@ export default Object.freeze(function (state, dom, guitar) {
                             return dom.button(highlight_element({
                                 "data-row": i,
                                 "data-element": j,
-                                click: guitar.set_preset
+                                click: handles.set_preset
                             }))(offset_label);
                         }
                     );
@@ -78,7 +78,11 @@ export default Object.freeze(function (state, dom, guitar) {
                     function (label, i) {
                         return dom.button(
                             highlight_active(
-                                {id: label, data: i, click: guitar.set_shutdown}
+                                {
+                                    id: label,
+                                    data: i,
+                                    click: handles.set_shutdown
+                                }
                             )
                         )(label);
                     }

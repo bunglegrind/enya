@@ -1,9 +1,12 @@
-/*jslint browser, unordered*/
+/*jslint browser, unordered, for*/
 import dom_builder from "./lib/dom.js";
 import connect from "./templates/connect.js";
 import main from "./templates/main.js";
 import mixer from "./templates/mixer.js";
 import effects from "./templates/effects.js";
+import screens from "./sonic-ui.js";
+
+const views = {connect, main, mixer, effects};
 
 function factory(root, doc, guitar) {
     const dom = dom_builder(doc);
@@ -13,97 +16,93 @@ function factory(root, doc, guitar) {
     function init() {
         guitar.reset();
         state = {connected: false};
-        draw();
+        draw("connect");
     }
 
-    function update(updated_state) {
-        if (
-            state.effects
-            && (
-                Object.keys(state.effects).length
-                !== guitar.get_effects_length()
-            )
-        ) {
-            state = {...state, effects: {...state.effects, ...updated_state}};
-        } else if (
-            state.mixer
-            && (
-                Object.keys(state.mixer).length
-                !== guitar.get_mixer_length()
-            )
-        ) {
-            state = {...state, mixer: {...state.mixer, ...updated_state}};
+    function reset(keys) {
+        state = keys.reduce(function (acc, k) {
+            const toR = {...acc};
+            toR[k] = undefined;
+            return toR;
+        }, state);
+    }
 
-        } else {
-            state = {...state, ...updated_state};
-        }
-        return draw();
+    async function update(updated_state) {
+        state = {...state, ...updated_state};
+        return await draw();
     }
 
     function retrieve(prop) {
         return state[prop];
     }
 
+    let screen;
+    const handles = Object.freeze({
+        connect: async function () {
+            await guitar.connect();
+            reset(screens.main);
+            screen = "main";
+            return await update({connected: true, messages: guitar.messages});
+        },
+        disconnect: async function () {
 
-    function draw() {
+// cleanup performed by the cleanup handle
+
+            return await guitar.disconnect();
+        },
+        edit_preset: async function () {
+            reset(screens.effects);
+            return await draw("effects");
+        },
+        mixer: async function () {
+            reset(screens.mixer);
+            return await draw("mixer");
+        },
+        set_preset: async function ({currentTarget}) {
+
+            return await guitar.set_preset(
+                Number(currentTarget.getAttribute("data-row")),
+                Number(currentTarget.getAttribute("data-element")),
+                retrieve("preset")
+            );
+        },
+        set_shutdown: async function ({currentTarget}) {
+            return await guitar.set_shutdown(
+                Number(currentTarget.getAttribute("data"))
+            );
+        },
+        back: function () {
+            reset(screens.main);
+            return draw("main");
+        },
+        load_preset: async function () {
+            return await "File loaded";
+        },
+        save_preset_fields: function () {
+            return [
+                "amp", "eq", "noise", "mod", "delay", "reverb"
+            ];
+        }
+    });
+
+    async function draw(s) {
+        screen = s ?? screen;
         if (!state.connected) {
-            return root.replaceChildren(connect(dom, guitar));
-        }
-        if (state.battery === undefined) {
-            return guitar.query("battery");
-        }
-        if (state.autoshutdown === undefined) {
-            return guitar.query("autoshutdown");
-        }
-        if (state.preset === undefined) {
-            return guitar.query("preset");
+            return await root.replaceChildren(connect(dom, handles));
         }
 
-        if (state.mixer !== undefined) {
-            if (Object.keys(state.mixer).length !== guitar.get_mixer_length()) {
-                return guitar.group_query(
-                    "mixer",
-                    Object.keys(state.mixer).length
-                );
-            }
-
-            return root.replaceChildren(...mixer(state, dom, guitar));
+        const key = screens[screen].find((k) => state[k] === undefined);
+        if (key) {
+            return await guitar.query(key);
         }
 
-        if (state.mixer) {
-            if (
-                Object.keys(state.mixer).length
-                !== guitar.get_mixer_length()
-            ) {
-                return guitar.group_query(
-                    "mixer",
-                    Object.keys(state.mixer).length
-                );
-            }
-
-            return root.replaceChildren(...mixer(state, dom, guitar));
-        }
-
-
-        if (state.effects) {
-            if (
-                Object.keys(state.effects).length
-                !== guitar.get_effects_length()
-            ) {
-                return guitar.group_query(
-                    "effects",
-                    Object.keys(state.effects).length
-                );
-            }
-
-            return root.replaceChildren(...effects(state, dom, guitar));
-        }
-
-
-        return root.replaceChildren(...main(state, dom, guitar));
+        return root.replaceChildren(
+            ...views[screen](state, dom, handles)
+        );
     }
 
-    const drawer = Object.freeze({update, init, retrieve});
+
+    const drawer = Object.freeze({update, init});
     guitar.set_drawer(drawer);
 
     return drawer;

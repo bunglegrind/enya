@@ -1,17 +1,7 @@
 /*jslint browser, devel, unordered*/
 
-import guitar from "./sonic-settings.js";
+import guitar from "./sonic-parameters.js";
 import message_factory from "./message.js";
-
-const groups = Object.values(guitar.messages).reduce(
-    (acc, item) => (
-        (item.group && !acc.includes(item.group))
-        ? [...acc, item.group]
-        : acc
-    ),
-    []
-);
-
 
 function guitar_factory(device) {
 
@@ -45,19 +35,14 @@ function guitar_factory(device) {
         return drawer.update(state);
     }
 
-    async function set_shutdown(event) {
-        const selection = Number(event.currentTarget.getAttribute("data"));
+    async function set_shutdown(selection) {
         await send(
             message_builder.put("autoshutdown", {value: selection})
         );
     }
 
-    async function set_preset({currentTarget}) {
-        const position = Number(currentTarget.getAttribute("data-row"));
-        const offset = Number(currentTarget.getAttribute("data-element"));
+    async function set_preset(position, offset, preset) {
         console.log(position, offset);
-
-        const preset = drawer.retrieve("preset");
 
         const new_offsets = {...preset};
         new_offsets[`offset-${position}`] = offset;
@@ -70,14 +55,6 @@ function guitar_factory(device) {
         );
     }
 
-    async function edit_preset() {
-        return await drawer.update({effects: {}});
-    }
-
-    async function mixer() {
-        return await drawer.update({mixer: {}});
-    }
-
     async function connect() {
         try {
             await device.connect({
@@ -87,9 +64,6 @@ function guitar_factory(device) {
             });
 
             await device.start_notifications(handleNotifications);
-
-            drawer.update({connected: true});
-
         } catch (e) {
             console.log("ERROR", e);
         }
@@ -101,7 +75,6 @@ function guitar_factory(device) {
     }
 
     async function load_preset(ignore) {
-
         return await "File loaded";
     }
 
@@ -113,33 +86,9 @@ function guitar_factory(device) {
         return await send(message_builder.query(prop));
     }
 
-    async function group_query(group, par_offset) {
-        if (!groups.includes(group)) {
-            throw new Error(`Group name not valid: ${group}`);
-        }
-
-        console.log(guitar.messages);
-        return await query(
-            Object.entries(guitar.messages).find(
-                (a) => a[1].group === group && a[1].offset === par_offset
-            )[0]
-        );
-
-    }
-
-    function back() {
-        drawer.update({effects: undefined, mixer: undefined});
-    }
-
-    function get_group_elements(group) {
-        return Object.values(guitar.messages).filter(
-            (v) => v.group === group
-        ).length;
-    }
 
     return Object.freeze({
         connect,
-        group_query,
         query,
         set_drawer,
         disconnect: device.disconnect,
@@ -147,11 +96,6 @@ function guitar_factory(device) {
         set_shutdown,
         set_preset,
         load_preset,
-        get_effects_length: () => get_group_elements("effects"),
-        get_mixer_length: () => get_group_elements("mixer"),
-        edit_preset,
-        mixer,
-        back,
         messages: guitar.messages
     });
 }

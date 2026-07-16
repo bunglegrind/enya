@@ -1,11 +1,11 @@
 /*jslint browser, unordered*/
 
-export default Object.freeze(function (state, dom, guitar) {
+export default Object.freeze(function (state, dom, handles) {
     return [
         dom.header("header")(
             dom.button({
                 id: "back",
-                click: guitar.back
+                click: handles.back
             })("<=")
         ),
         dom.main("mixer")(JSON.stringify(state)),

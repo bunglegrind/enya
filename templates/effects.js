@@ -1,13 +1,12 @@
 /*jslint browser, devel, unordered*/
 import utils from "../utils.js";
 
-
-export default Object.freeze(function (state, dom, guitar) {
+export default Object.freeze(function (state, dom, handles) {
     return [
         dom.header("header")(
             dom.button({
                 id: "back",
-                click: guitar.back
+                click: handles.back
             })("<="),
             dom.button({
                 id: "save",
@@ -18,7 +17,10 @@ export default Object.freeze(function (state, dom, guitar) {
                         "Please enter a filename: "
                     );
                     if (name) {
-                        utils.save(state.effects, name);
+                        utils.save(
+                            utils.extract(handles.save_preset_fields(), state),
+                            name
+                        );
                     }
                 }
             })("Save..."),
@@ -31,7 +33,7 @@ export default Object.freeze(function (state, dom, guitar) {
                         + "Proceed?"
                     );
                     if (confirm) {
-                        const return_message = await guitar.load_preset(
+                        const return_message = await handles.load_preset(
                             await utils.load(target)
                         );
 
@@ -46,7 +48,7 @@ export default Object.freeze(function (state, dom, guitar) {
             })("Undo"),
             dom.button({
                 id: "mixer",
-                click: guitar.mixer
+                click: handles.mixer
             })("⚙")
         ),
         dom.main("effects")(JSON.stringify(state))

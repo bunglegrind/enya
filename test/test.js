@@ -2,7 +2,7 @@
 
 import message_factory from "../message.js";
 import actual_messages from "./messages.js";
-import sonic from "../sonic-settings.js";
+import sonic from "../sonic-parameterjs";
 import jSCheck from "./jscheck.js";
 const jsc = jSCheck();
 const jsc1 = jSCheck();

@@ -81,6 +81,15 @@ function popup(dom, prompt, inner, buttons = 2) {
     });
 }
 
+function extract(keys, obj) {
+    const toR = Object.create(null);
+    keys.forEach(function (key) {
+        toR[key] = obj[key];
+    });
+
+    return Object.freeze(toR);
+}
+
 export default Object.freeze({
     save: function (data, name) {
         const link = document.createElement("a");
@@ -117,5 +126,6 @@ export default Object.freeze({
     },
     confirm_popup: function (dom, prompt) {
         return popup(dom, prompt, undefined, 1);
-    }
+    },
+    extract
 });

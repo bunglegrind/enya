@@ -1,6 +1,6 @@
 /*jslint browser, devel, unordered*/
 import message_factory from "../message.js";
-import sonic from "../sonic-settings.js";
+import sonic from "../sonic-parameters.js";
 
 const msg_builder = message_factory(sonic.messages);
 

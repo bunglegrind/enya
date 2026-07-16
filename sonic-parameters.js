@@ -6,38 +6,32 @@ const guitar = {
         guitar: {//guitar input volume
             opcode: 0x00,
             offset: 0,
-            parameters: [{name: "value", min: 0, max: 100}],
-            group: "mixer"
+            parameters: [{name: "value", min: 0, max: 100}]
         },
         otg: {//usb output volume
             opcode: 0x01,
             offset: 1,
-            parameters: [{name: "value", min: 0, max: 100}],
-            group: "mixer"
+            parameters: [{name: "value", min: 0, max: 100}]
         },
         bluetooth: {//bluetooth input volume
             opcode: 0x02,
             offset: 2,
-            parameters: [{name: "value", min: 0, max: 100}],
-            group: "mixer"
+            parameters: [{name: "value", min: 0, max: 100}]
         },
         box: {//speaker output volume
             opcode: 0x03,
             offset: 3,
-            parameters: [{name: "value", min: 0, max: 100}],
-            group: "mixer"
+            parameters: [{name: "value", min: 0, max: 100}]
         },
         ear: {//3.5mm jack output volume
             opcode: 0x04,
             offset: 4,
-            parameters: [{name: "value", min: 0, max: 100}],
-            group: "mixer"
+            parameters: [{name: "value", min: 0, max: 100}]
         },
         line: {//6.35mm jack output volume
             opcode: 0x05,
             offset: 5,
-            parameters: [{name: "value", min: 0, max: 100}],
-            group: "mixer"
+            parameters: [{name: "value", min: 0, max: 100}]
         },
         //status is on/off
         amp: {
@@ -52,8 +46,7 @@ const guitar = {
                 {name: "middle", min: 0, max: 100},
                 {name: "treble", min: 0, max: 100},
                 {name: "presence", min: 0, max: 100}
-            ],
-            group: "effects"
+            ]
         },
         eq: {
             opcode: 0x07,
@@ -66,8 +59,7 @@ const guitar = {
                 {name: "hz750", min: 0, max: 24, offset: 12},
                 {name: "hz2200", min: 0, max: 24, offset: 12},
                 {name: "hz6600", min: 0, max: 24, offset: 12}
-            ],
-            group: "effects"
+            ]
         },
         mod: {
             opcode: 0x08,
@@ -79,8 +71,7 @@ const guitar = {
                 ]},
                 {name: "depth", min: 0, max: 100},
                 {name: "rate", min: 0, max: 100}
-            ],
-            group: "effects"
+            ]
         },
         noise: {
             opcode: 0x09,
@@ -91,8 +82,7 @@ const guitar = {
                 {name: "attack", min: 0, max: 100},
                 {name: "release", min: 0, max: 100},
                 {name: "hold", min: 0, max: 100}
-            ],
-            group: "effects"
+            ]
         },
         delay: {
             opcode: 0x0a,
@@ -102,8 +92,7 @@ const guitar = {
                 {name: "time", min: 0, max: 600},//two bytes
                 {name: "level", min: 0, max: 100},
                 {name: "feedback", min: 0, max: 100}
-            ],
-            group: "effects"
+            ]
         },
         reverb: {
             opcode: 0x0b,
@@ -112,8 +101,7 @@ const guitar = {
                 {name: "status", min: 0, max: 1},
                 {name: "level", min: 0, max: 100},
                 {name: "decay", min: 0, max: 100}
-            ],
-            group: "effects"
+            ]
         },
         battery: {opcode: 0x11, parameters: [
             {name: "value", min: 0, max: 100}

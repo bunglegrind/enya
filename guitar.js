@@ -7,32 +7,19 @@ function guitar_factory(device) {
 
     const message_builder = message_factory(guitar.messages);
 
+    function handleNotifications(handler) {
+        return function handle({target}) {
+            const response = message_builder.from(target.value);
 
-    let drawer;
+            console.log("Received: ", response.toArray());
 
-    function set_drawer(d) {
-        drawer = d;
-    }
+            const state = Object.create(null);
+            state[response.get_msg()] = (
+                response.get_parameters().value ?? response.get_parameters()
+            );
 
-    function cleanUp() {
-        console.log("Disconnetted");
-        drawer.init();
-    }
-
-    function handleNotifications(event) {
-        const response = message_builder.from(event.target.value);
-
-        console.log("Received: ", response.toArray());
-
-
-
-
-        const state = Object.create(null);
-        state[response.get_msg()] = (
-            response.get_parameters().value ?? response.get_parameters()
-        );
-
-        return drawer.update(state);
+            return handler(state);
+        };
     }
 
     async function set_shutdown(selection) {
@@ -55,7 +42,7 @@ function guitar_factory(device) {
         );
     }
 
-    async function connect() {
+    async function connect(handler, cleanUp) {
         try {
             await device.connect({
                 name: guitar.name,
@@ -63,7 +50,7 @@ function guitar_factory(device) {
                 cleanUp
             });
 
-            await device.start_notifications(handleNotifications);
+            await device.start_notifications(handleNotifications(handler));
         } catch (e) {
             console.log("ERROR", e);
         }
@@ -90,7 +77,6 @@ function guitar_factory(device) {
     return Object.freeze({
         connect,
         query,
-        set_drawer,
         disconnect: device.disconnect,
         reset: device.disconnect,
         set_shutdown,

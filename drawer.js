@@ -27,22 +27,24 @@ function factory(root, doc, guitar) {
         }, state);
     }
 
-    async function update(updated_state) {
+    let screen;
+    async function update(updated_state, s = screen) {
         state = {...state, ...updated_state};
-        return await draw();
+        return await draw(s);
     }
 
     function retrieve(prop) {
         return state[prop];
     }
 
-    let screen;
     const handles = Object.freeze({
         connect: async function () {
-            await guitar.connect();
+            await guitar.connect(update, init);
             reset(screens.main);
-            screen = "main";
-            return await update({connected: true, messages: guitar.messages});
+            return await update(
+                {connected: true, messages: guitar.messages},
+                "main"
+            );
         },
         disconnect: async function () {
 
@@ -86,7 +88,8 @@ function factory(root, doc, guitar) {
     });
 
     async function draw(s) {
-        screen = s ?? screen;
+        screen = s;
+
         if (!state.connected) {
             return await root.replaceChildren(connect(dom, handles));
         }
@@ -102,10 +105,7 @@ function factory(root, doc, guitar) {
     }
 
 
-    const drawer = Object.freeze({update, init});
-    guitar.set_drawer(drawer);
-
-    return drawer;
+    return Object.freeze({update, init});
 }
 
 export default Object.freeze(factory);

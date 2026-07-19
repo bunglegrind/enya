@@ -2,12 +2,13 @@
 
 import guitar from "./sonic-parameters.js";
 import message_factory from "./message.js";
+import pubsub from "./lib/pubsub.js";
 
 function guitar_factory(device) {
 
     const message_builder = message_factory(guitar.messages);
 
-    function handleNotifications(handler) {
+    function handleNotifications(pubsub) {
         return function handle({target}) {
             const response = message_builder.from(target.value);
 
@@ -18,7 +19,7 @@ function guitar_factory(device) {
                 response.get_parameters().value ?? response.get_parameters()
             );
 
-            return handler(state);
+            return pubsub.exec(state);
         };
     }
 
@@ -42,7 +43,7 @@ function guitar_factory(device) {
         );
     }
 
-    async function connect(handler, cleanUp) {
+    async function connect(cleanUp) {
         try {
             await device.connect({
                 name: guitar.name,
@@ -50,7 +51,11 @@ function guitar_factory(device) {
                 cleanUp
             });
 
-            await device.start_notifications(handleNotifications(handler));
+            const ps = pubsub();
+
+            await device.start_notifications(handleNotifications(ps));
+
+            return ps;
         } catch (e) {
             console.log("ERROR", e);
         }

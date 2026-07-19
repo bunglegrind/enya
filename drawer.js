@@ -39,7 +39,8 @@ function factory(root, doc, guitar) {
 
     const handles = Object.freeze({
         connect: async function () {
-            await guitar.connect(update, init);
+            const pubsub = await guitar.connect(init);
+            pubsub.replace(update);
             reset(screens.main);
             return await update(
                 {connected: true, messages: guitar.messages},

@@ -77,8 +77,11 @@ const guitar_mock = {
     },
     line: {
         value: 0
-    }
+    },
+    effects: (new Array(16).fill({}))
 };
+
+const effects = ["amp", "eq", "noise", "mod", "reverb", "delay"];
 
 function connect({cleanUp}) {
     clean = cleanUp;
@@ -105,20 +108,41 @@ function write(buffer) {
     const element = msg.get_msg();
     console.log(element);
 
+    const preset = (
+        guitar_mock.preset.switch * 4
+        + guitar_mock.preset[`offset-${guitar_mock.preset.switch}`]
+    );
     if (type === "put") {
-        guitar_mock[element] = msg.get_parameters();
-        console.log(guitar_mock[element]);
-        encoded_message = msg_builder.response(
-            element,
-            guitar_mock[element]
-        ).toArray();
+        if (!effects.includes(element)) {
+            guitar_mock[element] = msg.get_parameters();
+            console.log(guitar_mock[element]);
+            encoded_message = msg_builder.response(
+                element,
+                guitar_mock[element]
+            ).toArray();
+        } else {
+            guitar_mock[preset][element] = msg.get_parameters();
+            console.log(guitar_mock[preset][element]);
+            encoded_message = msg_builder.response(
+                element,
+                guitar_mock[preset][element]
+            ).toArray();
+        }
     }
 
+
     if (type === "query") {
-        encoded_message = msg_builder.response(
-            element,
-            guitar_mock[element]
-        ).toArray();
+        if (!effects.includes(element)) {
+            encoded_message = msg_builder.response(
+                element,
+                guitar_mock[element]
+            ).toArray();
+        } else {
+            encoded_message = msg_builder.response(
+                element,
+                guitar_mock.effects[preset][element] ?? guitar_mock[element]
+            ).toArray();
+        }
     }
 
     const event = Object.create(null);

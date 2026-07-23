@@ -29,21 +29,25 @@ function prepareMessage(m) {
     return [0xaa, 0x55, ...mess, parity, 0x55, 0xaa];
 }
 
+let query;
+
 async function send(message) {
     const m = prepareMessage(message);
     validateMessage(m);
+    if (m[0] === 0x00) {
+        query = [0x10, m[1]];
+    }
     await writer.writeValueWithoutResponse(
         Uint8Array.from(m)
     );
 }
 
 sendButton.addEventListener("click", function () {
-    if (senderMessage.value && (senderMessage.value.length % 2 === 0)) {
-        send(senderMessage.value.match(/[\da-fA-F]{1,2}/g).map((x) => parseInt("0x" + x)));
+    const m = senderMessage.value.replaceAll(" ", "");
+    if (m && (m.length % 2 === 0)) {
+        send(m.match(/[\da-fA-F]{2}/g).map((x) => parseInt("0x" + x)));
     }
 });
-
-
 
 const guitar = {
     name: "NOVA Go Sonic System",
@@ -100,6 +104,12 @@ function handleNotifications(event) {
     validateMessage(response);
 
     printResponse(response);
+
+    if (query) {
+        q = query;
+        query = undefined;
+        await send(q);
+    }
 }
 
 async function getGuitarState() {}

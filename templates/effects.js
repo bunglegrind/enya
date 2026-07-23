@@ -1,4 +1,4 @@
-/*jslint browser, devel, unordered*/
+/*jslint browser, devel, unordered, fart*/
 import utils from "../utils.js";
 
 export default Object.freeze(function (state, dom, handles) {
@@ -33,11 +33,19 @@ export default Object.freeze(function (state, dom, handles) {
                         + "Proceed?"
                     );
                     if (confirm) {
-                        const return_message = await handles.load_preset(
-                            await utils.load(target)
+                        return await handles.load_preset(
+                            await utils.load(
+                                target
+                            ),
+                            async function end_cb(msg) {
+                                return await utils.confirm_popup(
+                                    dom,
+                                    msg
+                                );
+                            }
+
                         );
 
-                        await utils.confirm_popup(dom, return_message);
                     }
                     target.value = "";
                 }
@@ -51,6 +59,12 @@ export default Object.freeze(function (state, dom, handles) {
                 click: handles.mixer
             })("⚙")
         ),
-        dom.main("effects")(JSON.stringify(state))
+        dom.main("effects")(JSON.stringify(Object.entries(state).filter(
+            ([k]) => handles.save_preset_fields().includes(k)
+        ))),
+        dom.footer("footer")(
+            dom.div("battery")(state.battery + "% 🔋")
+        )
+
     ];
 });

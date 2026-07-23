@@ -138,8 +138,8 @@ const guitar = {
             {name: "id-6", min: 0, max: 255},
             {name: "id-7", min: 0, max: 255},
             {name: "id-8", min: 0, max: 255}
-        ]}
-        //TODO: factory reset
+        ]},
+        reset: {opcode: 0x0d, parameters: [{name: "value", min: 0, max: 0}]}
         //TODO: firmware update
     }
 };

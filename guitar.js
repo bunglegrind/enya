@@ -78,10 +78,19 @@ function guitar_factory(device) {
         return await send(message_builder.query(prop));
     }
 
+    async function write(prop, parameters) {
+        if (!Object.keys(guitar.messages).includes(prop)) {
+            throw new Error(`Prop name not valid: ${prop}`);
+        }
+
+        return await send(message_builder.put(prop, parameters));
+    }
+
 
     return Object.freeze({
         connect,
         query,
+        write,
         disconnect: device.disconnect,
         reset: device.disconnect,
         set_shutdown,

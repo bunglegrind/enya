@@ -78,8 +78,10 @@ const guitar_mock = {
     line: {
         value: 0
     },
-    effects: (new Array(16).fill({}))
+    effects: []
 };
+
+guitar_mock.effects = (new Array(16).fill(0)).map(() => Object.create(null));
 
 const effects = ["amp", "eq", "noise", "mod", "reverb", "delay"];
 
@@ -106,7 +108,6 @@ function write(buffer) {
     const type = msg.get_type();
 
     const element = msg.get_msg();
-    console.log(element);
 
     const preset = (
         guitar_mock.preset.switch * 4
@@ -115,17 +116,15 @@ function write(buffer) {
     if (type === "put") {
         if (!effects.includes(element)) {
             guitar_mock[element] = msg.get_parameters();
-            console.log(guitar_mock[element]);
             encoded_message = msg_builder.response(
                 element,
                 guitar_mock[element]
             ).toArray();
         } else {
-            guitar_mock[preset][element] = msg.get_parameters();
-            console.log(guitar_mock[preset][element]);
+            guitar_mock.effects[preset][element] = msg.get_parameters();
             encoded_message = msg_builder.response(
                 element,
-                guitar_mock[preset][element]
+                guitar_mock.effects[preset][element]
             ).toArray();
         }
     }

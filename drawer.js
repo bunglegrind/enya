@@ -37,10 +37,50 @@ function factory(root, doc, guitar) {
         return state[prop];
     }
 
+    let pubsub;
+
+    function verify(expected, actual) {
+        const expected_pars = Object.entries(expected[1]);
+        const actual_pars = Object.entries(actual[1]);
+
+        return (
+            expected[0] === actual[0]
+            && expected_pars.every(function ([k, v], i) {
+                return (
+                    k === actual_pars[i][0]
+                    && v === actual_pars[i][1]
+                );
+            })
+        );
+    }
+
+    function load(assessing, data, callback) {
+        return async function (state) {
+            if (!verify(assessing, Object.entries(state)[0])) {
+                throw new Error("Error. Aborting");
+            }
+            if (data.length > 0) {
+                pubsub.set(load(data[0], data.slice(1), callback));
+                return await guitar.write(data[0][0], data[0][1]);
+            }
+
+            pubsub.set(update);
+            await callback("Preset imported correctly");
+            reset(screens.effects);
+            return await draw("effects");
+        };
+    }
+
+    const effects_msgs = ["amp", "eq", "noise", "mod", "delay", "reverb"];
+    const mixer_msgs = [
+        "guitar", "otg", "otg", "box",
+        "line", "ear", "bluetooth"
+    ];
+
     const handles = Object.freeze({
         connect: async function () {
-            const pubsub = await guitar.connect(init);
-            pubsub.replace(update);
+            pubsub = await guitar.connect(init);
+            pubsub.set(update);
             reset(screens.main);
             return await update(
                 {connected: true, messages: guitar.messages},
@@ -78,14 +118,20 @@ function factory(root, doc, guitar) {
             reset(screens.main);
             return draw("main");
         },
-        load_preset: async function () {
-            return await "File loaded";
+        load_preset: async function (data, callback) {
+            if (data.amp.type === 0) {
+                delete data.amp.presence;
+            }
+            data = Object.entries(data);
+            if (data.some((d) => !effects_msgs.includes(d[0]))) {
+                throw new Error("Invalid uploaded preset");
+            }
+
+            pubsub.set(load(data[0], data.slice(1), callback));
+            return await guitar.write(data[0][0], data[0][1]);
         },
-        save_preset_fields: function () {
-            return [
-                "amp", "eq", "noise", "mod", "delay", "reverb"
-            ];
-        }
+        save_preset_fields: () => effects_msgs,
+        mixer_fields: () => mixer_msgs
     });
 
     async function draw(s) {

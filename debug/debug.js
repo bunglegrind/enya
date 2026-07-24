@@ -34,8 +34,8 @@ let query;
 async function send(message) {
     const m = prepareMessage(message);
     validateMessage(m);
-    if (m[0] === 0x00) {
-        query = [0x10, m[1]];
+    if (message[0] === 0x00) {
+        query = [0x10, message[1]];
     }
     await writer.writeValueWithoutResponse(
         Uint8Array.from(m)
@@ -90,7 +90,7 @@ function printResponse(response) {
 }
 
 
-function handleNotifications(event) {
+async function handleNotifications(event) {
     let value = event.target.value;
 
     let i = 0;
@@ -106,9 +106,9 @@ function handleNotifications(event) {
     printResponse(response);
 
     if (query) {
-        q = query;
+        const q = query;
         query = undefined;
-        await send(q);
+        return await send(q);
     }
 }
 

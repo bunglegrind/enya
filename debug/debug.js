@@ -16,10 +16,21 @@ root.appendChild(notificationDisplay);
 const senderDiv = document.createElement("div");
 const senderMessage = document.createElement("input");
 senderMessage.type = "text";
+senderMessage.setAttribute("size", 50);
 senderDiv.appendChild(senderMessage);
 const sendButton = document.createElement("button");
 sendButton.append("Invia");
 senderDiv.appendChild(sendButton);
+
+const rawSenderDiv = document.createElement("div");
+const rawSenderMessage = document.createElement("input");
+rawSenderMessage.type = "text";
+rawSenderMessage.setAttribute("size", 50);
+rawSenderDiv.appendChild(rawSenderMessage);
+const rawSendButton = document.createElement("button");
+rawSendButton.append("Invia");
+rawSenderDiv.appendChild(rawSendButton);
+
 let writer;
 
 function prepareMessage(m) {
@@ -37,8 +48,13 @@ async function send(message) {
     if (message[0] === 0x00) {
         query = [0x10, message[1]];
     }
-    await writer.writeValueWithoutResponse(
-        Uint8Array.from(m)
+
+    return await rawSend(m);
+}
+
+async function rawSend(message) {
+    return await writer.writeValueWithoutResponse(
+        Uint8Array.from(message)
     );
 }
 
@@ -125,6 +141,7 @@ connectButton.addEventListener("click", async function () {
     toggle(connectButton);
 
     root.appendChild(senderDiv);
+    root.appendChild(rawSenderDiv);
     device.addEventListener("gattserverdisconnected", cleanUp);
 
     const service = await device.gatt.getPrimaryService(guitar.service);
@@ -142,6 +159,7 @@ connectButton.addEventListener("click", async function () {
 });
 
 function cleanUp() {
+    console.log("cleanUp called");
     if (!server.connected) {
         return;
     }
@@ -149,6 +167,8 @@ function cleanUp() {
     toggle(disconnectButton);
     toggle(connectButton);
     root.removeChild(senderDiv);
+    root.removeChild(rawSenderDiv);
+    root.removeChild(notificationDisplay);
 }
 
 disconnectButton.addEventListener("click", async function () {

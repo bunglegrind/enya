@@ -4,23 +4,34 @@ import guitar from "./sonic-parameters.js";
 import message_factory from "./message.js";
 import pubsub from "./lib/pubsub.js";
 
+const timeout = 1000;
+
 function guitar_factory(device) {
+    const external_pubsub = pubsub();
+    const internal_pubsub = pubsub();
+
 
     const message_builder = message_factory(guitar.messages);
 
-    function handleNotifications(pubsub) {
-        return function handle({target}) {
-            const response = message_builder.from(target.value);
+    const effects = ["amp", "eq", "noise", "mod", "delay", "reverb"];
 
-            console.log("Received: ", response.toArray());
+    let state = Object.create(null);
 
-            const state = Object.create(null);
-            state[response.get_msg()] = (
-                response.get_parameters().value ?? response.get_parameters()
-            );
+    function handleNotifications(target) {
+        const response = message_builder.from(target.value);
 
-            return pubsub.exec(state);
-        };
+        console.log("Received: ", response.toArray());
+
+
+        if (response.get_msg() === "preset") {
+            external_pubsub.emit("PresetChanged", response);
+        }
+
+
+        return internal_pubsub.emit(
+            "received",
+            response
+        );
     }
 
     async function set_shutdown(selection) {
@@ -29,10 +40,10 @@ function guitar_factory(device) {
         );
     }
 
-    async function set_preset(position, offset, preset) {
+    async function switch_preset(position, offset) {
         console.log(position, offset);
 
-        const new_offsets = {...preset};
+        const new_offsets = {...state.preset};
         new_offsets[`offset-${position}`] = offset;
         new_offsets.switch = position;
         await send(
@@ -51,11 +62,9 @@ function guitar_factory(device) {
                 cleanUp
             });
 
-            const ps = pubsub();
+            await device.start_notifications(handleNotifications);
 
-            await device.start_notifications(handleNotifications(ps));
-
-            return ps;
+            return external_pubsub;
         } catch (e) {
             console.log("ERROR", e);
         }
@@ -66,37 +75,179 @@ function guitar_factory(device) {
         await device.write(m.toBuffer());
     }
 
-    async function load_preset(ignore) {
-        return await "File loaded";
+    function query(component) {
+        return new Promise(function (resolve, reject) {
+            let id;
+
+            // from cache
+            if (state[component] !== undefined) {
+                return resolve(state[component]);
+            }
+
+            function switched() {
+                clearTimeout(id);
+                internal_pubsub.removeListener(get_value);
+                external_pubsub.removeListener(switched);
+
+                return reject("Preset switched. Aborting");
+            }
+
+            function abort() {
+                external_pubsub.emit("ConnectionLost");
+                internal_pubsub.removeListener(get_value);
+                if (effects.includes(component)) {
+                    external_pubsub.removeListener(switched);
+                }
+            }
+
+            function get_value(value) {
+                clearTimeout(id);
+                if (value.get_msg() !== component) {
+                    return reject(
+                        `asking ${component} received ${value.get_msg()}`
+                    );
+                }
+                internal_pubsub.removeListener(get_value);
+                if (effects.includes(component)) {
+                    external_pubsub.removeListener(switched);
+                }
+
+                state[component] = value;
+                return resolve(value);
+            }
+
+            internal_pubsub.addListener(get_value);
+            if (effects.includes(component)) {
+                external_pubsub.addListener(switched);
+            }
+            return send(message_builder.query(component)).then(
+                function () {
+                    id = setTimeout(abort, timeout);
+                }
+            );
+        });
+
     }
 
-    async function query(prop) {
-        if (!Object.keys(guitar.messages).includes(prop)) {
-            throw new Error(`Prop name not valid: ${prop}`);
+    function write(component, parameters) {
+        return new Promise(function (resolve, reject) {
+            let id;
+
+            // to cache
+            state[component] = parameters;
+
+            function switched() {
+                clearTimeout(id);
+                internal_pubsub.removeListener(get_value);
+                external_pubsub.removeListener(switched);
+
+                return reject("Preset switched. Aborting");
+            }
+
+            function abort() {
+                external_pubsub.emit("ConnectionLost");
+                internal_pubsub.removeListener(get_value);
+                if (effects.includes(component)) {
+                    external_pubsub.removeListener(switched);
+                }
+            }
+
+            function get_value(value) {
+                clearTimeout(id);
+                if (value.get_msg() !== component) {
+                    return reject(
+                        `asking ${component} received ${value.get_msg()}`
+                    );
+                }
+                internal_pubsub.removeListener(get_value);
+                if (effects.includes(component)) {
+                    external_pubsub.removeListener(switched);
+                }
+
+                state[component] = value;
+                return resolve(value);
+            }
+
+            internal_pubsub.addListener(get_value);
+            if (effects.includes(component)) {
+                external_pubsub.addListener(switched);
+            }
+            return send(message_builder.put(component, parameters)).then(
+                function () {
+                    id = setTimeout(abort, timeout);
+                }
+            );
+        });
+    }
+
+    async function update(component, parameters) {
+        return await "";
+    }
+
+    async function disconnect() {
+        return await device.disconnect();
+    }
+
+    function metadata(components) {
+        const meta = Object.create(null);
+
+        components.forEach(function (component) {
+            if (guitar.messages[component]) {
+                meta[component] = Object.create(null);
+                meta[component].parameters = (
+                    guitar.messages[component].parameters
+                );
+                meta.offset = guitar.messages[component].offset;
+            }
+        });
+
+        return meta;
+    }
+
+    async function enable(component) {
+        if (!effects.includes(component)) {
+            throw new Error(`${component} is not an effect`);
+        }
+        const parameters = await query(component);
+        if (parameters.status) {
+            return await true;
         }
 
-        return await send(message_builder.query(prop));
+        return await write(component, {...parameters, status: true});
     }
 
-    async function write(prop, parameters) {
-        if (!Object.keys(guitar.messages).includes(prop)) {
-            throw new Error(`Prop name not valid: ${prop}`);
+    async function disable(component) {
+        if (!effects.includes(component)) {
+            throw new Error(`${component} is not an effect`);
         }
+        await query(component);
 
-        return await send(message_builder.put(prop, parameters));
     }
 
+    function addListener(type, listener) {
+        return external_pubsub.addListener(type, listener);
+    }
+
+    function removeListener(type, listener) {
+        return external_pubsub.removeListener(type, listener);
+    }
+
+    async function get(components) {
+        return await "";
+
+    }
 
     return Object.freeze({
         connect,
-        query,
-        write,
-        disconnect: device.disconnect,
-        reset: device.disconnect,
-        set_shutdown,
-        set_preset,
-        load_preset,
-        messages: guitar.messages
+        update,
+        enable,
+        disable,
+        switch_preset,
+        get,
+        disconnect,
+        metadata,
+        addListener,
+        removeListener
     });
 }
 

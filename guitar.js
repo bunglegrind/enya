@@ -3,6 +3,7 @@
 import guitar from "./sonic-parameters.js";
 import message_factory from "./message.js";
 import pubsub from "./lib/pubsub.js";
+import cache_factory from "./lib/cache.js";
 
 const timeout = 1000;
 
@@ -14,10 +15,24 @@ function guitar_factory(device) {
     const message_builder = message_factory(guitar.messages);
 
     const effects = ["amp", "eq", "noise", "mod", "delay", "reverb"];
+    const mixer = ["guitar", "otg", "box", "line", "ear"];
 
-    let state = Object.create(null);
+    let state = cache_factory(
+        {effects, mixer}
+    );
 
+    state.reset();
+
+    let id;
+    function abort() {
+        external_pubsub.emit("ConnectionLost");
+    }
     function handleNotifications(target) {
+        if (id) {
+            clearTimeout(id);
+            id = undefined;
+        }
+
         const response = message_builder.from(target.value);
 
         console.log("Received: ", response.toArray());
@@ -72,111 +87,99 @@ function guitar_factory(device) {
 
     async function send(m) {
         console.log("sending ", m.toArray());
+        id = setTimeout(abort, timeout);
         await device.write(m.toBuffer());
     }
 
     function query(component) {
         return new Promise(function (resolve, reject) {
-            let id;
 
             // from cache
-            if (state[component] !== undefined) {
-                return resolve(state[component]);
+            const cached_value = state.read(component);
+            if (cached_value !== undefined) {
+                return resolve(cached_value);
             }
 
-            function switched() {
-                clearTimeout(id);
-                internal_pubsub.removeListener(get_value);
-                external_pubsub.removeListener(switched);
+            function clean(message) {
+                internal_pubsub.removeListener("received", get_value);
+                external_pubsub.removeListener("PresetChanged", clean);
+                external_pubsub.removeListener("ConnectionLost", clean);
 
-                return reject("Preset switched. Aborting");
             }
 
-            function abort() {
-                external_pubsub.emit("ConnectionLost");
-                internal_pubsub.removeListener(get_value);
-                if (effects.includes(component)) {
-                    external_pubsub.removeListener(switched);
-                }
+            function switched(message) {
+                clean();
+
+                return reject(message);
             }
 
             function get_value(value) {
-                clearTimeout(id);
                 if (value.get_msg() !== component) {
                     return reject(
                         `asking ${component} received ${value.get_msg()}`
                     );
                 }
-                internal_pubsub.removeListener(get_value);
-                if (effects.includes(component)) {
-                    external_pubsub.removeListener(switched);
-                }
+                internal_pubsub.removeListener("received", get_value);
+                external_pubsub.removeListener("PresetChanged", switched);
 
-                state[component] = value;
+                state.write(component, value);
                 return resolve(value);
             }
 
-            internal_pubsub.addListener(get_value);
-            if (effects.includes(component)) {
-                external_pubsub.addListener(switched);
-            }
-            return send(message_builder.query(component)).then(
-                function () {
-                    id = setTimeout(abort, timeout);
-                }
+            internal_pubsub.addListener("received", get_value);
+            external_pubsub.addListener(
+                "PresetChanged",
+                switched,
+                "Preset switched. Aborting"
             );
+            external_pubsub.addListener(
+                "ConnectionLost",
+                switched,
+                "Connection Lost. Aborting"
+            );
+
+            return send(message_builder.query(component));
         });
 
     }
 
     function write(component, parameters) {
         return new Promise(function (resolve, reject) {
-            let id;
 
             // to cache
-            state[component] = parameters;
+            state.write(component, parameters);
 
             function switched() {
-                clearTimeout(id);
-                internal_pubsub.removeListener(get_value);
-                external_pubsub.removeListener(switched);
+                internal_pubsub.removeListener("received", get_value);
+                external_pubsub.removeListener("PresetChanged", switched);
 
                 return reject("Preset switched. Aborting");
             }
 
-            function abort() {
-                external_pubsub.emit("ConnectionLost");
-                internal_pubsub.removeListener(get_value);
-                if (effects.includes(component)) {
-                    external_pubsub.removeListener(switched);
-                }
-            }
-
             function get_value(value) {
-                clearTimeout(id);
                 if (value.get_msg() !== component) {
                     return reject(
                         `asking ${component} received ${value.get_msg()}`
                     );
                 }
+                internal_pubsub.removeListener("received", get_value);
+                external_pubsub.removeListener("PresetChanged", switched);
+
+                state.write(component, value);
+                return resolve(value);
+            }
+
+            internal_pubsub.addListener("received", get_value);
+            external_pubsub.addListener("ConnectionLost", function () {
                 internal_pubsub.removeListener(get_value);
                 if (effects.includes(component)) {
                     external_pubsub.removeListener(switched);
                 }
-
-                state[component] = value;
-                return resolve(value);
-            }
-
-            internal_pubsub.addListener(get_value);
+            });
             if (effects.includes(component)) {
                 external_pubsub.addListener(switched);
             }
-            return send(message_builder.put(component, parameters)).then(
-                function () {
-                    id = setTimeout(abort, timeout);
-                }
-            );
+            return send(message_builder.put(component, parameters));
         });
     }
 

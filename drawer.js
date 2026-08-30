@@ -14,8 +14,6 @@ function factory(root, doc, guitar) {
     let state;
 
     function init() {
-        guitar.reset();
-        state = {connected: false};
         draw("connect");
     }
 
@@ -28,14 +26,6 @@ function factory(root, doc, guitar) {
     }
 
     let screen;
-    async function update(updated_state, s = screen) {
-        state = {...state, ...updated_state};
-        return await draw(s);
-    }
-
-    function retrieve(prop) {
-        return state[prop];
-    }
 
     let pubsub;
 
@@ -64,55 +54,46 @@ function factory(root, doc, guitar) {
                 return await guitar.write(data[0][0], data[0][1]);
             }
 
-            pubsub.set(update);
             await callback("Preset imported correctly");
             reset(screens.effects);
             return await draw("effects");
         };
     }
 
-    const effects_msgs = ["amp", "eq", "noise", "mod", "delay", "reverb"];
-    const mixer_msgs = [
-        "guitar", "otg", "otg", "box",
-        "line", "ear", "bluetooth"
-    ];
-
     const handles = Object.freeze({
         connect: async function () {
             pubsub = await guitar.connect(init);
-            pubsub.set(update);
-            reset(screens.main);
-            return await update(
-                {connected: true, messages: guitar.messages},
-                "main"
-            );
+            return await draw("main");
         },
         disconnect: async function () {
 
 // cleanup performed by the cleanup handle
 
-            return await guitar.disconnect();
+            await guitar.disconnect();
+            return draw("connect");
         },
         edit_preset: async function () {
             reset(screens.effects);
             return await draw("effects");
         },
         mixer: async function () {
-            reset(screens.mixer);
             return await draw("mixer");
         },
         set_preset: async function ({currentTarget}) {
 
-            return await guitar.set_preset(
+            await guitar.switch_preset(
                 Number(currentTarget.getAttribute("data-row")),
-                Number(currentTarget.getAttribute("data-element")),
-                retrieve("preset")
+                Number(currentTarget.getAttribute("data-element"))
             );
+            draw();
         },
         set_shutdown: async function ({currentTarget}) {
-            return await guitar.set_shutdown(
-                Number(currentTarget.getAttribute("data"))
+            await guitar.update(
+                "autoshutdown",
+                {value: Number(currentTarget.getAttribute("data-value"))}
             );
+
+            draw();
         },
         back: function () {
             reset(screens.main);
@@ -123,36 +104,51 @@ function factory(root, doc, guitar) {
                 delete data.amp.presence;
             }
             data = Object.entries(data);
-            if (data.some((d) => !effects_msgs.includes(d[0]))) {
+            if (
+                data.some((d) => !guitar.metadata().effects.includes(d[0]))
+                || guitar.metadata().effects.some(
+                    (f) => !data.map((d) => d[0]).includes(f)
+                )
+            ) {
                 throw new Error("Invalid uploaded preset");
             }
 
-            pubsub.set(load(data[0], data.slice(1), callback));
-            return await guitar.write(data[0][0], data[0][1]);
+            await Promise.all(
+                data.map(function ([component, parameters]) {
+                    if (!parameters.status) {
+                        return guitar.disable(component);
+                    }
+                    return guitar.enable(component).then(
+                        function () {
+                            return guitar.update(component, parameters);
+                        }
+                    );
+                })
+            );
+
+            return await callback("Preset successfully loaded");
         },
-        save_preset_fields: () => effects_msgs,
-        mixer_fields: () => mixer_msgs
+        save_preset_fields: () => guitar.metadata().effects,
+        mixer_fields: () => guitar.metadata().mixer
     });
 
-    async function draw(s) {
+    async function draw(s = screen) {
         screen = s;
-
-        if (!state.connected) {
-            return await root.replaceChildren(connect(dom, handles));
+        if (screen === "connect") {
+            return root.replaceChildren(connect(dom, handles));
         }
 
-        const key = screens[screen].find((k) => state[k] === undefined);
-        if (key) {
-            return await guitar.query(key);
-        }
+
+        const parameters = await guitar.get(screens[screen]);
+        parameters.metadata = guitar.metadata(screens[screen]);
 
         return root.replaceChildren(
-            ...views[screen](state, dom, handles)
+            ...views[screen](parameters, dom, handles)
         );
     }
 
 
-    return Object.freeze({update, init});
+    return Object.freeze({init});
 }
 
 export default Object.freeze(factory);

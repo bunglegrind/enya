@@ -1,11 +1,11 @@
 /*jslint browser, unordered, fart*/
 
-export default Object.freeze(function (state, dom, handles) {
+export default Object.freeze(function (parameters, dom, handles) {
 
-    const messages = state.messages;
+    const messages = parameters.metadata;
 
     function highlight_active(props) {
-        if (props.data !== state.autoshutdown) {
+        if (props["data-value"] !== parameters.autoshutdown.value) {
             return props;
         }
 
@@ -13,12 +13,12 @@ export default Object.freeze(function (state, dom, handles) {
     }
 
     function highlight_element(props) {
-        const offset = state.preset[`offset-${props["data-row"]}`];
+        const offset = parameters.preset[`offset-${props["data-row"]}`];
         if (props["data-element"] !== offset) {
             return props;
         }
 
-        if (props["data-row"] === state.preset.switch) {
+        if (props["data-row"] === parameters.preset.switch) {
             return Object.assign({}, props, {class: "selected"});
         }
 
@@ -72,7 +72,7 @@ export default Object.freeze(function (state, dom, handles) {
             )
         ),
         dom.footer("footer")(
-            dom.div("battery")(state.battery + "% 🔋"),
+            dom.div("battery")(parameters.battery.value + "% 🔋"),
             dom.div("autoshutdown")(
                 ...messages.autoshutdown.parameters[0].labels.map(
                     function (label, i) {
@@ -80,7 +80,7 @@ export default Object.freeze(function (state, dom, handles) {
                             highlight_active(
                                 {
                                     id: label,
-                                    data: i,
+                                    "data-value": i,
                                     click: handles.set_shutdown
                                 }
                             )

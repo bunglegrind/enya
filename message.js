@@ -70,7 +70,7 @@ function message_factory(messages) {
             if (!parameter) {
                 throw new Error(
                     "Unknown parameter",
-                    {cause: JSON.stringify({par_name, message})}
+                    {cause: {par_name, message}}
                 );
             }
             if (value < parameter.min || value > parameter.max) {

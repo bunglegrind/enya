@@ -3,40 +3,57 @@ let notifier;
 let writer;
 let server;
 let custom_service;
-async function connect({name, service, cleanUp}) {
-    const device = await navigator.bluetooth.requestDevice({
+let event_handle;
+
+function connect({name, service, cleanUp}) {
+    return navigator.bluetooth.requestDevice({
         filters: [{name}],
         optionalServices: [service, 0x1801, 0x1800]
+    }).then(function (device) {
+        server = device.gatt;
+        device.addEventListener("gattserverdisconnected", function clean() {
+            cleanUp();
+            return device.removeEventListener(
+                "gattserverdisconnected",
+                clean
+            );
+
+        });
+        notifier.removeEventListener(
+            "characteristicvaluechanged",
+            event_handle
+        );
+        custom_service = service;
+
+        return server.connect();
     });
-    server = device.gatt;
-    await server.connect();
-    device.addEventListener("gattserverdisconnected", cleanUp);
-    custom_service = service;
 }
 
-async function start_notifications(handle) {
-    const service = await server.getPrimaryService(custom_service);
-    const chars = await service.getCharacteristics();
-
-    notifier = chars.find((c) => c.properties.notify);
-    writer = chars.find((c) => c.properties.writeWithoutResponse);
-
-    await notifier.startNotifications();
-
-    notifier.addEventListener(
-        "characteristicvaluechanged",
-        handle
-    );
-
+function start_notifications(handle) {
+    return server.getPrimaryService(custom_service).then(
+        function (service) {
+            return service.getCharacteristics();
+        }
+    ).then(function (chars) {
+        notifier = chars.find((c) => c.properties.notify);
+        writer = chars.find((c) => c.properties.writeWithoutResponse);
+        event_handle = handle;
+        notifier.addEventListener(
+            "characteristicvaluechanged",
+            handle
+        );
+        return notifier.startNotifications();
+    });
 }
+
 function disconnect() {
     if (server?.connected) {
         server.disconnect();
     }
 }
 
-async function write(buffer) {
-    return await writer.writeValueWithoutResponse(
+function write(buffer) {
+    return writer.writeValueWithoutResponse(
         buffer
     );
 }

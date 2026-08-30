@@ -1,7 +1,7 @@
 /*jslint browser, devel, unordered, fart*/
 import utils from "../utils.js";
 
-export default Object.freeze(function (state, dom, handles) {
+export default Object.freeze(function (parameters, dom, handles) {
     return [
         dom.header("header")(
             dom.button({
@@ -18,7 +18,7 @@ export default Object.freeze(function (state, dom, handles) {
                     );
                     if (name) {
                         utils.save(
-                            utils.extract(handles.save_preset_fields(), state),
+                            utils.extract(handles.save_preset_fields(), parameters),
                             name
                         );
                     }
@@ -59,11 +59,11 @@ export default Object.freeze(function (state, dom, handles) {
                 click: handles.mixer
             })("⚙")
         ),
-        dom.main("effects")(JSON.stringify(Object.entries(state).filter(
+        dom.main("effects")(JSON.stringify(Object.entries(parameters).filter(
             ([k]) => handles.save_preset_fields().includes(k)
         ))),
         dom.footer("footer")(
-            dom.div("battery")(state.battery + "% 🔋")
+            dom.div("battery")(parameters.battery.value + "% 🔋")
         )
 
     ];

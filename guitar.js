@@ -3,195 +3,227 @@
 import guitar from "./sonic-parameters.js";
 import message_factory from "./message.js";
 import pubsub from "./lib/pubsub.js";
-import cache_factory from "./lib/cache.js";
+import cache_factory from "./lib/store.js";
 
 const timeout = 1000;
 
 function guitar_factory(device) {
     const external_pubsub = pubsub();
-    const internal_pubsub = pubsub();
 
 
     const message_builder = message_factory(guitar.messages);
 
     const effects = ["amp", "eq", "noise", "mod", "delay", "reverb"];
-    const mixer = ["guitar", "otg", "box", "line", "ear"];
+    const mixer = ["guitar", "otg", "box", "line", "ear", "bluetooth"];
 
     let state = cache_factory(
         {effects, mixer}
     );
 
-    state.reset();
+    let listener;
 
-    let id;
-    function abort() {
-        external_pubsub.emit("ConnectionLost");
-    }
-    function handleNotifications(target) {
-        if (id) {
-            clearTimeout(id);
-            id = undefined;
+    let preset_operation_pending = false;
+    let global_clean_send;
+    function clean(client_clean) {
+        client_clean();
+        external_pubsub.removeListener("ConnectionLost", disconnect);
+        external_pubsub.removeListener("PresetChanged", reset_effects);
+        state.reset();
+        preset_operation_pending = false;
+        if (typeof global_clean_send === "function") {
+            global_clean_send("Connection lost. Aborting");
         }
+        global_clean_send = undefined;
+        listener = undefined;
+    }
 
+    function disconnect() {
+        device.disconnect();
+    }
+    external_pubsub.addListener("ConnectionLost", disconnect);
+
+    function reset_effects() {
+        return state.reset("effects");
+    }
+    external_pubsub.addListener("PresetChanged", reset_effects);
+
+    function handleNotifications({target}) {
         const response = message_builder.from(target.value);
 
         console.log("Received: ", response.toArray());
 
 
         if (response.get_msg() === "preset") {
-            external_pubsub.emit("PresetChanged", response);
+            reset_effects();
+            if (!preset_operation_pending) {
+                return external_pubsub.emit("PresetChanged", response);
+            }
+            preset_operation_pending = false;
         }
 
 
-        return internal_pubsub.emit(
-            "received",
-            response
-        );
+        if (typeof listener === "function") {
+            return listener(response);
+        }
     }
 
-    async function set_shutdown(selection) {
-        await send(
-            message_builder.put("autoshutdown", {value: selection})
-        );
-    }
-
-    async function switch_preset(position, offset) {
+    function switch_preset(position, offset) {
         console.log(position, offset);
 
-        const new_offsets = {...state.preset};
-        new_offsets[`offset-${position}`] = offset;
-        new_offsets.switch = position;
-        await send(
-            message_builder.put(
-                "preset",
-                new_offsets
-            )
-        );
+        return query("preset").then(function ({preset}) {
+            preset[`offset-${position}`] = offset;
+            preset.switch = position;
+
+            return preset;
+        }).then((new_offsets) => write("preset", new_offsets));
     }
 
-    async function connect(cleanUp) {
-        try {
-            await device.connect({
-                name: guitar.name,
-                service: guitar.service,
-                cleanUp
-            });
-
-            await device.start_notifications(handleNotifications);
-
+    function connect(cleanUp) {
+        return device.connect({
+            name: guitar.name,
+            service: guitar.service,
+            cleanUp: clean(cleanUp)
+        }).then(function () {
+            return device.start_notifications(handleNotifications);
+        }).then(function () {
             return external_pubsub;
-        } catch (e) {
-            console.log("ERROR", e);
-        }
+        });
     }
 
-    async function send(m) {
-        console.log("sending ", m.toArray());
-        id = setTimeout(abort, timeout);
-        await device.write(m.toBuffer());
+    let send_queue = [];
+    let timeout_id;
+
+    function send(m) {
+
+        function add(to_send) {
+            return send_queue.unshift(to_send);
+        }
+
+        function exec() {
+            if (timeout_id !== undefined) {
+                return;
+            }
+
+            if (!send_queue.length) {
+                return;
+            }
+
+            const {message, resolve, reject} = send_queue.pop();
+            console.log("sending ", message.toArray());
+
+            function connection_lost() {
+                external_pubsub.emit("ConnectionLost");
+
+                return device.disconnect();
+            }
+
+            timeout_id = setTimeout(
+                connection_lost,
+                timeout
+            );
+
+            function clean_send(reason) {
+                clearTimeout(timeout_id);
+                timeout_id = undefined;
+                listener = undefined;
+                external_pubsub.removeListener(
+                    "PresetChanged",
+                    on_preset_changed
+                );
+
+                if (reason) {
+                    reject(reason);
+                    send_queue.forEach(function ({reject}) {
+                        return reject(reason);
+                    });
+                    send_queue = [];
+                }
+            }
+
+            function on_preset_changed() {
+                const reason = "Preset switched. Aborting";
+                return clean_send(reason);
+            }
+
+            function notify(incoming_message) {
+                clean_send();
+                if (incoming_message.get_msg() !== message.get_msg()) {
+                    throw new Error(
+                        "Wrong reply received",
+                        {cause: {incoming_message, message}}
+                    );
+                }
+                exec();
+
+                return resolve(incoming_message);
+            }
+            external_pubsub.addListener(
+                "PresetChanged",
+                on_preset_changed
+            );
+
+            listener = notify;
+            if (message.get_msg() === "preset") {
+                preset_operation_pending = true;
+            }
+            global_clean_send = clean_send;
+
+            return device.write(message.toBuffer());
+        }
+
+        const {promise, resolve, reject} = Promise.withResolvers();
+
+        add({message: m, resolve, reject});
+        exec();
+
+        return promise;
     }
 
     function query(component) {
-        return new Promise(function (resolve, reject) {
+        // from cache
+        const cached_value = state.read(component);
+        if (cached_value !== undefined) {
+            const obj = Object.create(null);
+            obj[component] = cached_value;
+            return Promise.resolve(obj);
+        }
 
-            // from cache
-            const cached_value = state.read(component);
-            if (cached_value !== undefined) {
-                return resolve(cached_value);
+        return send(message_builder.query(component)).then(
+            function (msg) {
+                return state.write(msg.get_msg(), msg.get_parameters());
+
             }
-
-            function clean(message) {
-                internal_pubsub.removeListener("received", get_value);
-                external_pubsub.removeListener("PresetChanged", clean);
-                external_pubsub.removeListener("ConnectionLost", clean);
-
-            }
-
-            function switched(message) {
-                clean();
-
-                return reject(message);
-            }
-
-            function get_value(value) {
-                if (value.get_msg() !== component) {
-                    return reject(
-                        `asking ${component} received ${value.get_msg()}`
-                    );
-                }
-                internal_pubsub.removeListener("received", get_value);
-                external_pubsub.removeListener("PresetChanged", switched);
-
-                state.write(component, value);
-                return resolve(value);
-            }
-
-            internal_pubsub.addListener("received", get_value);
-            external_pubsub.addListener(
-                "PresetChanged",
-                switched,
-                "Preset switched. Aborting"
-            );
-            external_pubsub.addListener(
-                "ConnectionLost",
-                switched,
-                "Connection Lost. Aborting"
-            );
-
-            return send(message_builder.query(component));
-        });
-
+        );
     }
 
     function write(component, parameters) {
-        return new Promise(function (resolve, reject) {
-
-            // to cache
-            state.write(component, parameters);
-
-            function switched() {
-                internal_pubsub.removeListener("received", get_value);
-                external_pubsub.removeListener("PresetChanged", switched);
-
-                return reject("Preset switched. Aborting");
+        return send(message_builder.put(component, parameters)).then(
+            function () {
+                // to cache
+                return state.write(component, parameters);
             }
+        );
+    }
 
-            function get_value(value) {
-                if (value.get_msg() !== component) {
-                    return reject(
-                        `asking ${component} received ${value.get_msg()}`
-                    );
-                }
-                internal_pubsub.removeListener("received", get_value);
-                external_pubsub.removeListener("PresetChanged", switched);
+    function update(component, parameters) {
+        if (component === "preset") {
+            throw new Error("preset cannot be updated");
+        }
 
-                state.write(component, value);
-                return resolve(value);
-            }
+        let promise = Promise.resolve(true);
 
-            internal_pubsub.addListener("received", get_value);
-            external_pubsub.addListener("ConnectionLost", function () {
-                internal_pubsub.removeListener(get_value);
-                if (effects.includes(component)) {
-                    external_pubsub.removeListener(switched);
-                }
+        if (effects.includes(component)) {
+            promise = query(component).then(function (current_parameters) {
+                parameters.status = current_parameters.status;
             });
-            if (effects.includes(component)) {
-                external_pubsub.addListener(switched);
-            }
-            return send(message_builder.put(component, parameters));
+        }
+
+        return promise.then(function () {
+            return write(component, parameters);
         });
     }
 
-    async function update(component, parameters) {
-        return await "";
-    }
-
-    async function disconnect() {
-        return await device.disconnect();
-    }
-
-    function metadata(components) {
+    function metadata(components = []) {
         const meta = Object.create(null);
 
         components.forEach(function (component) {
@@ -203,28 +235,36 @@ function guitar_factory(device) {
                 meta.offset = guitar.messages[component].offset;
             }
         });
+        meta.mixer = mixer;
+        meta.effects = effects;
 
         return meta;
     }
 
-    async function enable(component) {
+    function enable(component) {
         if (!effects.includes(component)) {
             throw new Error(`${component} is not an effect`);
         }
-        const parameters = await query(component);
-        if (parameters.status) {
-            return await true;
-        }
+        return query(component).then(function (value) {
+            console.log(value);
+            if (value[component].status) {
+                return true;
+            }
+            return write(component, {...value[component], status: 1});
+        }).then(() => true);
 
-        return await write(component, {...parameters, status: true});
     }
 
-    async function disable(component) {
+    function disable(component) {
         if (!effects.includes(component)) {
             throw new Error(`${component} is not an effect`);
         }
-        await query(component);
-
+        return query(component).then(function (value) {
+            if (!value[component].status) {
+                return true;
+            }
+            return write(component, {...value[component], status: 0});
+        }).then(() => true);
     }
 
     function addListener(type, listener) {
@@ -235,9 +275,15 @@ function guitar_factory(device) {
         return external_pubsub.removeListener(type, listener);
     }
 
-    async function get(components) {
-        return await "";
+    function get(components) {
+        return Promise.all(
+            components.map((component) => query(component))
+        ).then(function (values) {
 
+            return values.reduce(function (obj, item) {
+                return {...obj, ...item};
+            }, {});
+        });
     }
 
     return Object.freeze({

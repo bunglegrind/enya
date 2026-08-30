@@ -190,7 +190,8 @@ function guitar_factory(device) {
 
         return send(message_builder.query(component)).then(
             function (msg) {
-                return state.write(msg.get_msg(), msg.get_parameters());
+                state.write(msg.get_msg(), msg.get_parameters());
+                return query(component);
 
             }
         );

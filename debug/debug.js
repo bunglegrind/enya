@@ -23,6 +23,7 @@ sendButton.append("Invia");
 senderDiv.appendChild(sendButton);
 
 const rawSenderDiv = document.createElement("div");
+rawSenderDiv.id = "raw";
 const rawSenderMessage = document.createElement("input");
 rawSenderMessage.type = "text";
 rawSenderMessage.setAttribute("size", 50);

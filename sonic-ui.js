@@ -1,16 +1,16 @@
 /*jslint browser, unordered*/
 
-const screen = Object.create(null);
+const screens = Object.create(null);
 
-screen.connect = [];
+screens.connect = [];
 
-screen.main = [
+screens.main = [
     "battery",
     "autoshutdown",
     "preset"
 ];
 
-screen.effects = [
+screens.effects = [
     "battery",
     "autoshutdown",
     "preset",
@@ -22,7 +22,7 @@ screen.effects = [
     "reverb"
 ];
 
-screen.mixer = [
+screens.mixer = [
     "battery",
     "autoshutdown",
     "guitar",
@@ -33,5 +33,14 @@ screen.mixer = [
     "line"
 ];
 
-export default Object.freeze(screen);
+const labels = {
+    guitar: "Guitar output",
+    otg: "USB input",
+    bluetooth: "Bluetooth input",
+    box: "Speaker output",
+    ear: "jack 3.5mm output",
+    line: "jack 6.5 output"
+};
+
+export default Object.freeze({screens, labels});
 

@@ -4,7 +4,9 @@ import connect from "./templates/connect.js";
 import main from "./templates/main.js";
 import mixer from "./templates/mixer.js";
 import effects from "./templates/effects.js";
-import screens from "./sonic-ui.js";
+import ui from "./sonic-ui.js";
+
+const {screens, labels} = ui;
 
 const views = {connect, main, mixer, effects};
 
@@ -130,7 +132,11 @@ function factory(root, doc, guitar) {
         },
         refresh: () => draw(),
         save_preset_fields: () => guitar.metadata().effects,
-        mixer_fields: () => guitar.metadata().mixer
+        mixer_fields: () => guitar.metadata().mixer,
+        update_volume: async function (name, value) {
+            await guitar.update(name, {value});
+            return await draw();
+        }
     });
 
     async function draw(s = screen) {
@@ -144,7 +150,7 @@ function factory(root, doc, guitar) {
         parameters.metadata = guitar.metadata(screens[screen]);
 
         return root.replaceChildren(
-            ...views[screen](parameters, dom, handles)
+            ...views[screen](parameters, dom, handles, labels)
         );
     }
 

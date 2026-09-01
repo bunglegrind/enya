@@ -90,9 +90,20 @@ function extract(keys, obj) {
     return Object.freeze(toR);
 }
 
-function draw_range(dom, type, value, {min, max}) {
-    return dom.div({class: "volume"})(
-        dom.input({type: "range", min, max, name: type, value, id: type})
+function draw_range(dom, type, value, {min, max}, labels, update_volume) {
+    return dom.section({class: "volume"})(
+        dom.h2()(labels[type]),
+        dom.input({
+            type: "range",
+            min,
+            max,
+            name: type,
+            value,
+            id: type,
+            change: function ({target}) {
+                return update_volume(target.name, Number(target.value));
+            }
+        })
     );
 }
 

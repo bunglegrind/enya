@@ -25,16 +25,18 @@ function guitar_factory(device) {
     let preset_operation_pending = false;
     let global_clean_send;
     function clean(client_clean) {
-        client_clean();
-        external_pubsub.removeListener("ConnectionLost", disconnect);
-        external_pubsub.removeListener("PresetChanged", reset_effects);
-        state.reset();
-        preset_operation_pending = false;
-        if (typeof global_clean_send === "function") {
-            global_clean_send("Connection lost. Aborting");
-        }
-        global_clean_send = undefined;
-        listener = undefined;
+        return function () {
+            client_clean();
+            external_pubsub.removeListener("ConnectionLost", disconnect);
+            external_pubsub.removeListener("PresetChanged", reset_effects);
+            state.reset();
+            preset_operation_pending = false;
+            if (typeof global_clean_send === "function") {
+                global_clean_send("Connection lost. Aborting");
+            }
+            global_clean_send = undefined;
+            listener = undefined;
+        };
     }
 
     function disconnect() {
@@ -215,7 +217,7 @@ function guitar_factory(device) {
 
         if (effects.includes(component)) {
             promise = query(component).then(function (current_parameters) {
-                parameters.status = current_parameters.status;
+                parameters.status = current_parameters[component].status;
             });
         }
 

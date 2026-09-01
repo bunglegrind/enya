@@ -13,16 +13,16 @@ function connect({name, service, cleanUp}) {
         server = device.gatt;
         device.addEventListener("gattserverdisconnected", function clean() {
             cleanUp();
+            notifier.removeEventListener(
+                "characteristicvaluechanged",
+                event_handle
+            );
             return device.removeEventListener(
                 "gattserverdisconnected",
                 clean
             );
 
         });
-        notifier.removeEventListener(
-            "characteristicvaluechanged",
-            event_handle
-        );
         custom_service = service;
 
         return server.connect();

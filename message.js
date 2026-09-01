@@ -189,7 +189,8 @@ function message_factory(messages) {
                     if (max < 256) {
                         name = name;
                         parameters[name] = pars[i];
-                        if (pars[i] > max || pars[i] < min) {
+                        if (type === "put" && (pars[i] > max || pars[i] < min)) {
+
                             throw new Error(
                                 "Invalid message parameters",
                                 {cause: {serialized, parameter: pars[i]}}

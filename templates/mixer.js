@@ -1,7 +1,7 @@
 /*jslint browser, unordered, fart*/
 import utils from "../utils.js";
 
-export default Object.freeze(function (parameters, dom, handles) {
+export default Object.freeze(function (parameters, dom, handles, labels) {
     const mixer = Object.entries(parameters).filter(
         ([k]) => handles.mixer_fields().includes(k)
     ).map(function (entry) {
@@ -9,10 +9,11 @@ export default Object.freeze(function (parameters, dom, handles) {
             dom,
             entry[0],
             entry[1].value,
-            parameters.metadata[entry[0]].parameters[0]
+            parameters.metadata[entry[0]].parameters[0],
+            labels,
+            handles.update_volume
         );
     });
-    console.log(mixer);
     return [
         dom.header("header")(
             dom.button({

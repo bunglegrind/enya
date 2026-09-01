@@ -128,6 +128,7 @@ function factory(root, doc, guitar) {
 
             return await callback("Preset successfully loaded");
         },
+        refresh: () => draw(),
         save_preset_fields: () => guitar.metadata().effects,
         mixer_fields: () => guitar.metadata().mixer
     });

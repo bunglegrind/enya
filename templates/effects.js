@@ -18,7 +18,9 @@ export default Object.freeze(function (parameters, dom, handles) {
                     );
                     if (name) {
                         utils.save(
-                            utils.extract(handles.save_preset_fields(), parameters),
+                            utils.extract(
+                                handles.save_preset_fields(), parameters
+                            ),
                             name
                         );
                     }
@@ -38,10 +40,11 @@ export default Object.freeze(function (parameters, dom, handles) {
                                 target
                             ),
                             async function end_cb(msg) {
-                                return await utils.confirm_popup(
+                                await utils.confirm_popup(
                                     dom,
                                     msg
                                 );
+                                return await handles.refresh();
                             }
 
                         );

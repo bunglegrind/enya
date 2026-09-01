@@ -61,19 +61,19 @@ const guitar_mock = {
         decay: 0
     },
     guitar: {
-        value: 0
+        value: 30
     },
     otg: {
-        value: 0
+        value: 10
     },
     bluetooth: {
-        value: 0
+        value: 88
     },
     box: {
-        value: 0
+        value: 42
     },
     ear: {
-        value: 0
+        value: 12
     },
     line: {
         value: 0

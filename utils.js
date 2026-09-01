@@ -90,6 +90,12 @@ function extract(keys, obj) {
     return Object.freeze(toR);
 }
 
+function draw_range(dom, type, value, {min, max}) {
+    return dom.div({class: "volume"})(
+        dom.input({type: "range", min, max, name: type, value, id: type})
+    );
+}
+
 export default Object.freeze({
     save: function (data, name) {
         const link = document.createElement("a");
@@ -127,5 +133,6 @@ export default Object.freeze({
     confirm_popup: function (dom, prompt) {
         return popup(dom, prompt, undefined, 1);
     },
-    extract
+    extract,
+    draw_range
 });

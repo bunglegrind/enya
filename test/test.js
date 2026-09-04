@@ -72,6 +72,37 @@ Object.entries(sonic.messages).forEach(function ([message_name, p]) {
         ]
     );
 
+    function specifier(parameters) {
+        return function generator() {
+            const to_remove = jsc.integer(0, parameters.length - 2)();
+            const par = [...parameters];
+            par.splice(to_remove, 1);
+            return jsc.object(
+                jsc.array(par.map(({name}) => name)),
+                par.map(({min, max}) => jsc.integer(min, max))
+            )();
+        };
+    }
+
+
+    if (p.parameters.length > 1) {
+        jsc.claim(
+            "put missing parameters",
+            function (verdict, msg, parameters) {
+                try {
+                    msg_builder.put(msg, parameters);
+                } catch (e) {
+                    return verdict(e.message === "Invalid parameter");
+                }
+                return verdict(false);
+            },
+            [
+                message_name,
+                specifier(p.parameters)
+            ]
+        );
+    }
+
     jsc.claim(
         "response",
         function (verdict, msg, parameters) {
@@ -119,7 +150,7 @@ Object.entries(sonic.messages).forEach(function ([message_name, p]) {
                 try {
                     msg_builder.put(msg, parameters);
                 } catch (e) {
-                    return verdict(e.message === "Parameter out of range");
+                    return verdict(e.message === "Invalid parameter");
                 }
 
                 verdict(false);

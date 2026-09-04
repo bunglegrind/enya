@@ -65,18 +65,25 @@ function message_factory(messages) {
 
         const pars = messages[message].parameters;
 
-        Object.entries(parameters).forEach(function ([par_name, value]) {
+        Object.entries(parameters).forEach(function ([par_name]) {
             const parameter = pars.find(({name}) => name === par_name);
             if (!parameter) {
                 throw new Error(
-                    "Unknown parameter",
+                    `Unknown parameter`,
                     {cause: {par_name, message}}
                 );
             }
-            if (value < parameter.min || value > parameter.max) {
+        });
+        pars.forEach(function ({name, max, min}) {
+            const value = parameters[name];
+            if (
+                !Number.isInteger(value)
+                || value < min
+                || value > max
+            ) {
                 throw new Error(
-                    "Parameter out of range",
-                    {cause: {name: par_name, value}}
+                    "Invalid parameter",
+                    {cause: {name, value}}
                 );
             }
         });
@@ -189,7 +196,10 @@ function message_factory(messages) {
                     if (max < 256) {
                         name = name;
                         parameters[name] = pars[i];
-                        if (type === "put" && (pars[i] > max || pars[i] < min)) {
+                        if (
+                            type === "put"
+                            && (pars[i] > max || pars[i] < min)
+                        ) {
 
                             throw new Error(
                                 "Invalid message parameters",

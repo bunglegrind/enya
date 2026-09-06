@@ -51,9 +51,10 @@ function message_factory(messages) {
 
     function validate_message(message) {
         if (!Object.keys(messages).includes(message)) {
+            const reason = {cause: message};
             throw new Error(
-                "Unknown message",
-                {cause: message}
+                `Unknown message ${JSON.stringify(reason)}`,
+                reason
             );
         }
 
@@ -81,9 +82,10 @@ function message_factory(messages) {
                 || value < min
                 || value > max
             ) {
+                const reason = {cause: {message, name, value}};
                 throw new Error(
-                    "Invalid parameter",
-                    {cause: {name, value}}
+                    "Invalid parameter for " + JSON.stringify(reason),
+                    reason
                 );
             }
         });

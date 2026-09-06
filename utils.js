@@ -90,18 +90,57 @@ function extract(keys, obj) {
     return Object.freeze(toR);
 }
 
-function draw_range(dom, type, value, {min, max}, labels, update_volume) {
+function enforce_min_max(min, max) {
+    return function ({target}) {
+        if (Number(target.value) > max) {
+            target.value = target.value.slice(0, target.value.length - 1);
+        }
+        if (Number(target.value) < min) {
+            target.value = min;
+        }
+    };
+}
+
+function draw_range({dom, type, value, range, labels, callback, label}) {
     return dom.section({class: "volume"})(
         dom.h2()(labels[type]),
+        dom.label({for: `${type}-range`})(label),
         dom.input({
             type: "range",
-            min,
-            max,
+            min: range.min,
+            max: range.max,
+            value,
+            id: `${type}-range`,
+            change: function ({target}) {
+                return callback(type, Number(target.value));
+            }
+        }),
+        dom.label({for: `${type}-value`})("Value"),
+        dom.input({
+            type: "number",
+            value,
+            min: range.min,
+            max: range.max,
+            id: `${type}-value`,
+            keyup: enforce_min_max(range.min, range.max),
+            change: function ({target}) {
+                return callback(type, Number(target.value));
+            }
+        })
+    );
+}
+
+function on_off_switch({dom, type, value, labels, callback, label}) {
+    return dom.section({class: "switch"})(
+        dom.h2()(labels[type]),
+        dom.label({for: type})(label),
+        dom.input({
+            type: "checkbox",
             name: type,
             value,
             id: type,
             change: function ({target}) {
-                return update_volume(target.name, Number(target.value));
+                return callback(target.name, Number(target.value));
             }
         })
     );
@@ -145,5 +184,6 @@ export default Object.freeze({
         return popup(dom, prompt, undefined, 1);
     },
     extract,
-    draw_range
+    draw_range,
+    on_off_switch
 });

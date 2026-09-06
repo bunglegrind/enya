@@ -102,9 +102,6 @@ function factory(root, doc, guitar) {
             return draw("main");
         },
         load_preset: async function (data, callback) {
-            if (data.amp.type === 0) {
-                delete data.amp.presence;
-            }
             data = Object.entries(data);
             if (
                 data.some((d) => !guitar.metadata().effects.includes(d[0]))

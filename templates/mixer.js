@@ -5,14 +5,15 @@ export default Object.freeze(function (parameters, dom, handles, labels) {
     const mixer = Object.entries(parameters).filter(
         ([k]) => handles.mixer_fields().includes(k)
     ).map(function (entry) {
-        return utils.draw_range(
+        return utils.draw_range({
             dom,
-            entry[0],
-            entry[1].value,
-            parameters.metadata[entry[0]].parameters[0],
+            type: entry[0],
+            value: entry[1].value,
+            range: parameters.metadata[entry[0]].parameters[0],
             labels,
-            handles.update_volume
-        );
+            callback: handles.update_volume,
+            label: "Volume"
+        });
     });
     return [
         dom.header("header")(
@@ -22,6 +23,7 @@ export default Object.freeze(function (parameters, dom, handles, labels) {
             })("<=")
         ),
         dom.main("mixer")(
+            dom.h1("mixer")("Mixer"),
             ...mixer
         ),
         dom.footer("footer")(

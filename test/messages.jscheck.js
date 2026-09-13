@@ -21,7 +21,6 @@ jsc.claim(
         try {
             msg_builder.query(msg);
         } catch (e) {
-            console.log(e);
             return verdict(e.message.startsWith("Unknown message"), e);
         }
 

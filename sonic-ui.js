@@ -39,7 +39,13 @@ const labels = {
     bluetooth: "Bluetooth input",
     box: "Speaker output",
     ear: "jack 3.5mm output",
-    line: "jack 6.5 output"
+    line: "jack 6.5 output",
+    amp: "Amplifier",
+    eq: "Equalizer",
+    mod: "Modulator",
+    noise: "Noise gate",
+    delay: "Delay",
+    reverb: "Reverb"
 };
 
 export default Object.freeze({screens, labels});

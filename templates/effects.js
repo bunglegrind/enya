@@ -1,7 +1,10 @@
 /*jslint browser, devel, unordered, fart*/
 import utils from "../utils.js";
 
-export default Object.freeze(function (parameters, dom, handles) {
+export default Object.freeze(function (parameters, dom, handles, labels) {
+    const effects = Object.entries(parameters).filter(
+        ([k]) => handles.save_preset_fields().includes(k)
+    );
     return [
         dom.header("header")(
             dom.button({
@@ -62,9 +65,16 @@ export default Object.freeze(function (parameters, dom, handles) {
                 click: handles.mixer
             })("⚙")
         ),
-        dom.main("effects")(JSON.stringify(Object.entries(parameters).filter(
-            ([k]) => handles.save_preset_fields().includes(k)
-        ))),
+        dom.main("effects")(...effects.map(function ([name, values]) {
+            return utils.draw_component({
+                dom,
+                name,
+                enabled: values.status,
+                edit_callback: handles.edit_effect(name, values),
+                enable_callback: handles.toggle_effect(name),
+                label: labels[name]
+            });
+        })),
         dom.footer("footer")(
             dom.div("battery")(parameters.battery.value + "% 🔋")
         )

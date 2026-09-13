@@ -18,7 +18,7 @@ const guitar_mock = {
         "offset-3": 0
     },
     amp: {
-        status: 0,
+        status: 1,
         type: 0,
         "volume/preamp": 0,
         master: 0,
@@ -28,7 +28,7 @@ const guitar_mock = {
         presence: 0
     },
     eq: {
-        status: 0,
+        status: 1,
         pregain: 0,
         hz80: 0,
         hz240: 0,
@@ -50,7 +50,7 @@ const guitar_mock = {
         hold: 0
     },
     delay: {
-        status: 0,
+        status: 1,
         time: 0,
         level: 0,
         feedback: 0

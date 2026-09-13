@@ -63,6 +63,19 @@ function factory(root, doc, guitar) {
     }
 
     const handles = Object.freeze({
+        edit_effect: function (name, value) {
+            return function () {
+                return value + name;
+            };
+        },
+        toggle_effect: function (component) {
+            return async function (enabled) {
+                if (enabled) {
+                    return await guitar.enable(component);
+                }
+                return await guitar.disable(component);
+            };
+        },
         connect: async function () {
             pubsub = await guitar.connect(init);
             return await draw("main");

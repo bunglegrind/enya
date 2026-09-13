@@ -7,10 +7,22 @@ html {
 }
 
 main {
+    margin: 0.5em auto;
+}
+
+main#presets {
     display: grid;
     grid-template-rows: repeat(4, minmax(0, 1fr));
     grid-template-columns: repeat(4, minmax(0, 1fr));
     margin: 0.5em auto;
+}
+
+main#effects {
+    grid-template-columns: 1fr;
+}
+
+#effects button:not(:lat-child)::after {
+    content: "↓";
 }
 
 main > button {
@@ -123,11 +135,22 @@ label#load {
     border-color: buttonborder;
 }
 
-main#mixer {
-    grid-template-rows: repeat(6, minmax(0, 1fr));
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
 #mixer div {
     padding: 2em;
+}
+
+.effect {
+    margin: 1em;
+    border: 2px solid black;
+    width: 50%;
+    position: relative;
+    padding-bottom: 24px;
+}
+
+.effect:not(:last-of-type)::after {
+    content: "↓";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 1em);
 }

@@ -146,6 +146,41 @@ function on_off_switch({dom, type, value, labels, callback, label}) {
     );
 }
 
+function draw_component({
+    dom,
+    name,
+    enabled,
+    edit_callback,
+    enable_callback,
+    label
+}) {
+    function add_check(attrs) {
+        if (enabled) {
+            attrs.checked = "checked";
+        }
+        return attrs;
+    }
+    return dom.div({class: ["effect", name]})(
+        dom.button({
+            click: function () {
+                return edit_callback;
+            },
+            type: "button"
+        })(
+            label
+        ),
+        dom.label()(
+            dom.input(add_check({
+                type: "checkbox",
+                change: function ({target}) {
+                    return enable_callback(target.checked);
+                }
+            })),
+            "Enabled"
+        )
+    );
+}
+
 export default Object.freeze({
     save: function (data, name) {
         const link = document.createElement("a");
@@ -185,5 +220,6 @@ export default Object.freeze({
     },
     extract,
     draw_range,
-    on_off_switch
+    on_off_switch,
+    draw_component
 });

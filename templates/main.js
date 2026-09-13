@@ -56,7 +56,7 @@ export default Object.freeze(function (parameters, dom, handles) {
                 click: handles.mixer
             })("⚙")
         ),
-        dom.main("main")(
+        dom.main("presets")(
             ...switch_offsets.labels.flatMap(
                 function (ignore, i) {
                     return preset_offsets[i].labels.map(

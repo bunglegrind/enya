@@ -4,27 +4,18 @@ import connect from "./templates/connect.js";
 import main from "./templates/main.js";
 import mixer from "./templates/mixer.js";
 import effects from "./templates/effects.js";
+import effect from "./templates/effect.js";
 import ui from "./sonic-ui.js";
 
 const {screens, labels} = ui;
 
-const views = {connect, main, mixer, effects};
+const views = {connect, main, mixer, effects, effect};
 
 function factory(root, doc, guitar) {
     const dom = dom_builder(doc);
 
-    let state;
-
     function init() {
         draw("connect");
-    }
-
-    function reset(keys) {
-        state = keys.reduce(function (acc, k) {
-            const toR = {...acc};
-            toR[k] = undefined;
-            return toR;
-        }, state);
     }
 
     let screen;
@@ -57,23 +48,27 @@ function factory(root, doc, guitar) {
             }
 
             await callback("Preset imported correctly");
-            reset(screens.effects);
             return await draw("effects");
         };
     }
 
     const handles = Object.freeze({
-        edit_effect: function (name, value) {
-            return function () {
-                return value + name;
+        edit_effect: function (name) {
+            return async function () {
+                await draw("effect", name);
             };
+        },
+        update_effect: function () {
+            return "";
         },
         toggle_effect: function (component) {
             return async function (enabled) {
                 if (enabled) {
-                    return await guitar.enable(component);
+                    await guitar.enable(component);
+                } else {
+                    await guitar.disable(component);
                 }
-                return await guitar.disable(component);
+                return await draw();
             };
         },
         connect: async function () {
@@ -88,7 +83,6 @@ function factory(root, doc, guitar) {
             return draw("connect");
         },
         edit_preset: async function () {
-            reset(screens.effects);
             return await draw("effects");
         },
         mixer: async function () {
@@ -110,9 +104,11 @@ function factory(root, doc, guitar) {
 
             draw();
         },
-        back: function () {
-            reset(screens.main);
-            return draw("main");
+        back: async function () {
+            return await draw("main");
+        },
+        back_edit: async function () {
+            return await draw("effects");
         },
         load_preset: async function (data, callback) {
             data = Object.entries(data);
@@ -149,18 +145,23 @@ function factory(root, doc, guitar) {
         }
     });
 
-    async function draw(s = screen) {
+    async function draw(s = screen, effect = undefined) {
         screen = s;
         if (screen === "connect") {
             return root.replaceChildren(connect(dom, handles));
         }
 
+        const components = [...screens[screen]];
 
-        const parameters = await guitar.get(screens[screen]);
-        parameters.metadata = guitar.metadata(screens[screen]);
+        if (screen === "effect") {
+            components.push(effect);
+        }
+
+        const parameters = await guitar.get(components);
+        parameters.metadata = guitar.metadata(components);
 
         return root.replaceChildren(
-            ...views[screen](parameters, dom, handles, labels)
+            ...views[screen](parameters, dom, handles, labels, effect)
         );
     }
 

@@ -160,13 +160,21 @@ function draw_component({
         }
         return attrs;
     }
+
+    function add_disabled(attrs) {
+        if (!enabled) {
+            attrs.disabled = "disabled";
+        }
+
+        return attrs;
+    }
     return dom.div({class: ["effect", name]})(
-        dom.button({
+        dom.button(add_disabled({
             click: function () {
-                return edit_callback;
+                return edit_callback();
             },
             type: "button"
-        })(
+        }))(
             label
         ),
         dom.label()(
@@ -177,6 +185,33 @@ function draw_component({
                 }
             })),
             "Enabled"
+        )
+    );
+}
+
+function draw_select({selected, dom, type, options, callback, label}) {
+
+    function add_selected(attrs) {
+        if (attrs.value === selected) {
+            attrs.selected = "selected";
+        }
+
+        return attrs;
+    }
+
+    return dom.div(type)(
+        dom.label({for: `${type}-select`})(
+            label
+        ),
+        dom.select({
+            id: `${type}-select`,
+            change: function ({target}) {
+                return callback(target);
+            }
+        })(
+            ...options.map(function (label, i) {
+                return dom.option(add_selected({value: i}))(label);
+            })
         )
     );
 }
@@ -221,5 +256,6 @@ export default Object.freeze({
     extract,
     draw_range,
     on_off_switch,
-    draw_component
+    draw_component,
+    draw_select
 });

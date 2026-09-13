@@ -33,6 +33,11 @@ screens.mixer = [
     "line"
 ];
 
+screens.effect = [
+    "battery",
+    "autoshutdown"
+];
+
 const labels = {
     guitar: "Guitar output",
     otg: "USB input",
@@ -45,7 +50,29 @@ const labels = {
     mod: "Modulator",
     noise: "Noise gate",
     delay: "Delay",
-    reverb: "Reverb"
+    reverb: "Reverb",
+    "volume/preamp": "Preamp",
+    master: "Master",
+    bass: "Bass",
+    middle: "Middle",
+    treble: "Treble",
+    presence: "Presence",
+    pregain: "Pregain",
+    hz80: "80 Hz",
+    hz240: "240 Hz",
+    hz750: "750 Hz",
+    hz2200: "2200 Hz",
+    hz6600: "6600 Hz",
+    depth: "Depth",
+    rate: "Rate",
+    threshold: "Threshold",
+    attack: "Attack",
+    release: "Release",
+    hold: "Hold",
+    time: "Time",
+    level: "Level",
+    feedback: "Feedback",
+    decay: "Decay"
 };
 
 export default Object.freeze({screens, labels});

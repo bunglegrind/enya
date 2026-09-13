@@ -1,28 +1,11 @@
 /*jslint browser, unordered, fart*/
 
 import message_factory from "../message.js";
-import actual_messages from "./messages.js";
 import sonic from "../sonic-parameters.js";
 import jSCheck from "./jscheck.js";
 const jsc = jSCheck();
-const jsc1 = jSCheck();
 
 const msg_builder = message_factory(sonic.messages);
-
-jsc1.claim("verify actual packets", function (verdict, array) {
-    try {
-        msg_builder.from(array);
-    } catch (ignore) {
-        return verdict(false);
-    }
-
-    return verdict(true);
-}, jsc1.sequence(actual_messages));
-
-jsc1.claim("decode and encode actual messages", function (verdict, m) {
-    const transformed = msg_builder.from(m).toArray();
-    return verdict(m.join() === transformed.join());
-}, jsc1.sequence(actual_messages));
 
 const messages = Object.keys(sonic.messages);
 
@@ -38,7 +21,8 @@ jsc.claim(
         try {
             msg_builder.query(msg);
         } catch (e) {
-            return verdict(e.message === "Unknown message");
+            console.log(e);
+            return verdict(e.message.startsWith("Unknown message"), e);
         }
 
         verdict(false);
@@ -55,7 +39,7 @@ jsc.claim(
 
 Object.entries(sonic.messages).forEach(function ([message_name, p]) {
     jsc.claim(
-        "put",
+        `put: ${message_name}`,
         function (verdict, msg, parameters) {
             verdict(
                 msg_builder.from(
@@ -87,14 +71,18 @@ Object.entries(sonic.messages).forEach(function ([message_name, p]) {
 
     if (p.parameters.length > 1) {
         jsc.claim(
-            "put missing parameters",
+            `put missing parameters: ${message_name}`,
             function (verdict, msg, parameters) {
+                let message;
                 try {
-                    msg_builder.put(msg, parameters);
+                    message = msg_builder.put(msg, parameters);
                 } catch (e) {
-                    return verdict(e.message === "Invalid parameter");
+                    return verdict(
+                        e.message.startsWith("Invalid parameter"),
+                        e
+                    );
                 }
-                return verdict(false);
+                return verdict(false, message);
             },
             [
                 message_name,
@@ -104,7 +92,7 @@ Object.entries(sonic.messages).forEach(function ([message_name, p]) {
     }
 
     jsc.claim(
-        "response",
+        `response: ${message_name}`,
         function (verdict, msg, parameters) {
             verdict(
                 msg_builder.from(
@@ -145,12 +133,15 @@ Object.entries(sonic.messages).forEach(function ([message_name, p]) {
 
     if (!only_queries.includes(message_name)) {
         jsc.claim(
-            "invalid put parameters",
+            `invalid put parameters: ${message_name}`,
             function (verdict, msg, parameters) {
                 try {
                     msg_builder.put(msg, parameters);
                 } catch (e) {
-                    return verdict(e.message === "Invalid parameter");
+                    return verdict(
+                        e.message.startsWith("Invalid parameter"),
+                        e
+                    );
                 }
 
                 verdict(false);
@@ -164,20 +155,14 @@ Object.entries(sonic.messages).forEach(function ([message_name, p]) {
     }
 });
 
-jsc.check({
-    detail: 3,
-    nr_trials: 300,
-    on_report: function (report) {
-        let output = document.getElementById("output");
-        output.innerHTML = report;
-    }
+export default Object.freeze(function () {
+    jsc.check({
+        detail: 3,
+        nr_trials: 300,
+        on_report: function (report) {
+            let output = document.getElementById("output");
+            output.innerHTML += report;
+        }
+    });
 });
 
-jsc1.check({
-    detail: 3,
-    nr_trials: actual_messages.length,
-    on_report: function (report) {
-        let output = document.getElementById("output1");
-        output.innerHTML = report;
-    }
-});

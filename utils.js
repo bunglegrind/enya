@@ -102,31 +102,41 @@ function enforce_min_max(min, max) {
 }
 
 function draw_range({dom, type, value, range, labels, callback, label}) {
+    let input_number;
+    const input_range = dom.input({
+        type: "range",
+        min: range.min,
+        max: range.max,
+        value,
+        id: `${type}-range`,
+        name: type,
+        change: function ({target}) {
+            input_number.value = Number(target.value);
+            return callback(type, Number(target.value));
+        },
+        input: function ({target}) {
+            input_number.value = Number(target.value);
+        }
+
+    });
+    input_number = dom.input({
+        type: "number",
+        value,
+        min: range.min,
+        max: range.max,
+        id: `${type}-value`,
+        keyup: enforce_min_max(range.min, range.max),
+        change: function ({target}) {
+            input_range.value = Number(target.value);
+            return callback(type, Number(target.value));
+        }
+    });
     return dom.section({class: "volume"})(
         dom.h2()(labels[type]),
         dom.label({for: `${type}-range`})(label),
-        dom.input({
-            type: "range",
-            min: range.min,
-            max: range.max,
-            value,
-            id: `${type}-range`,
-            change: function ({target}) {
-                return callback(type, Number(target.value));
-            }
-        }),
+        input_range,
         dom.label({for: `${type}-value`})("Value"),
-        dom.input({
-            type: "number",
-            value,
-            min: range.min,
-            max: range.max,
-            id: `${type}-value`,
-            keyup: enforce_min_max(range.min, range.max),
-            change: function ({target}) {
-                return callback(type, Number(target.value));
-            }
-        })
+        input_number
     );
 }
 
@@ -205,8 +215,9 @@ function draw_select({selected, dom, type, options, callback, label}) {
         ),
         dom.select({
             id: `${type}-select`,
+            name: type,
             change: function ({target}) {
-                return callback(target);
+                return callback(type, Number(target.value));
             }
         })(
             ...options.map(function (label, i) {

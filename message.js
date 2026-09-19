@@ -69,9 +69,10 @@ function message_factory(messages) {
         Object.entries(parameters).forEach(function ([par_name]) {
             const parameter = pars.find(({name}) => name === par_name);
             if (!parameter) {
+                const cause = {cause: {par_name, message}};
                 throw new Error(
-                    `Unknown parameter`,
-                    {cause: {par_name, message}}
+                    `Unknown parameter ${JSON.stringify(cause)}`,
+                    cause
                 );
             }
         });

@@ -58,8 +58,12 @@ function factory(root, doc, guitar) {
                 await draw("effect", name);
             };
         },
-        update_effect: function () {
-            return "";
+        update_effect: function (effect, values) {
+            return async function (name, value) {
+                values[name] = value;
+                await guitar.update(effect, values);
+                await draw("effect", effect);
+            };
         },
         toggle_effect: function (component) {
             return async function (enabled) {
@@ -145,7 +149,7 @@ function factory(root, doc, guitar) {
         }
     });
 
-    async function draw(s = screen, effect = undefined) {
+    async function draw(s = screen, effect) {
         screen = s;
         if (screen === "connect") {
             return root.replaceChildren(connect(dom, handles));

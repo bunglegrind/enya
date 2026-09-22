@@ -58,7 +58,8 @@ export default Object.freeze(function (parameters, dom, handles, labels) {
             })(dom.input({type: "file", accept: "application/json"}), "Load"),
             dom.button({
                 id: "undo",
-                click: utils.load
+                click: utils.load,
+                disabled: true
             })("Undo"),
             dom.button({
                 id: "mixer",

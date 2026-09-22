@@ -12,7 +12,8 @@ export default Object.freeze(function (parameters, dom, handles, labels) {
             range: parameters.metadata[entry[0]].parameters[0],
             labels,
             callback: handles.update_volume,
-            label: "Volume"
+            label: "Volume",
+            wrapper: "section"
         });
     });
     return [

@@ -101,7 +101,9 @@ function enforce_min_max(min, max) {
     };
 }
 
-function draw_range({dom, type, value, range, labels, callback, label}) {
+function draw_range(
+    {dom, type, value, range, labels, callback, label, wrapper}
+) {
     let input_number;
     const input_range = dom.input({
         type: "range",
@@ -131,7 +133,7 @@ function draw_range({dom, type, value, range, labels, callback, label}) {
             return callback(type, Number(target.value));
         }
     });
-    return dom.section({class: "volume"})(
+    return dom[wrapper]({class: "range"})(
         dom.h2()(labels[type]),
         dom.label({for: `${type}-range`})(label),
         input_range,
@@ -166,14 +168,14 @@ function draw_component({
 }) {
     function add_check(attrs) {
         if (enabled) {
-            attrs.checked = "checked";
+            attrs.checked = true;
         }
         return attrs;
     }
 
     function add_disabled(attrs) {
         if (!enabled) {
-            attrs.disabled = "disabled";
+            attrs.disabled = true;
         }
 
         return attrs;

@@ -1,7 +1,6 @@
 /*jslint browser, devel, unordered, fart*/
 import utils from "../utils.js";
 
-
 export default Object.freeze(function (
     parameters,
     dom,
@@ -15,8 +14,6 @@ export default Object.freeze(function (
             obj[e.name] = Number(e.value);
         });
 
-        console.log(obj);
-
         handles.update_effect();
     }
 
@@ -26,7 +23,11 @@ export default Object.freeze(function (
             dom.button({
                 id: "back",
                 click: handles.back_edit
-            })("<=")
+            })("<="),
+            dom.button({
+                id: "undo",
+                disabled: true
+            })("Undo")
         ),
         dom.main({id: "effect", change: update_effect})(
             dom.h1("effect-title")(global_labels[effect]),
@@ -44,7 +45,8 @@ export default Object.freeze(function (
                             effect,
                             parameters[effect]
                         ),
-                        label: "Value"
+                        label: "Value",
+                        wrapper: "div"
                     });
                 }
 
@@ -69,4 +71,3 @@ export default Object.freeze(function (
 
     ];
 });
-
